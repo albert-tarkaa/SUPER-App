@@ -1,0 +1,76 @@
+version: '3'
+
+services:
+  # Define the application service
+  app:
+    # Specify the build context and Dockerfile for building the app image
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        app_env: dev  # Pass the 'app_env' build argument to the Dockerfile
+
+    # Name the container for the application service
+    container_name: app
+
+    # Map the container's port 8080 to the host's port 8080
+    ports:
+      - 8080:8080
+
+    # Set environment variables for the Spring Boot application
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/compose-postgres  # Database connection URL
+      - SPRING_DATASOURCE_USERNAME=compose-postgres  # Database username
+      - SPRING_DATASOURCE_PASSWORD=compose-postgres  # Database password
+      - "SPRING_PROFILES_ACTIVE=prod"  # Activate the 'prod' profile for Spring Boot
+
+    # Define a volume for persistent data storage
+    volumes:
+      - type: volume
+        read_only: false
+        source: app_data  # Use the 'app_data' volume defined below
+        target: /src/main/resources/static/files  # Target directory in the container
+
+    # Connect the service to the 'app_network' network
+    networks:
+      - app_network
+
+    # Ensure that the 'db' service is started before this service
+    depends_on:
+      - db
+
+  # Define the database service
+  db:
+    image: 'postgres:13.1-alpine'  # Use the PostgreSQL 13.1 image with Alpine Linux
+
+    # Name the container for the database service
+    container_name: db
+
+    # Map the container's port 5432 to the host's port 5433
+    ports:
+      - 5433:5432
+
+    # Set environment variables for PostgreSQL
+    environment:
+      - POSTGRES_USER=compose-postgres  # Database username
+      - POSTGRES_PASSWORD=compose-postgres  # Database password
+
+    # Define a volume for persistent data storage
+    volumes:
+      - type: volume
+        read_only: false
+        source: app_data  # Use the 'app_data' volume defined below
+        target: /var/lib/postgresql/data  # Target directory in the container
+
+    # Connect the service to the 'app_network' network
+    networks:
+      - app_network
+
+# Define the network that both services will use
+networks:
+  app_network:
+    external: false  # Create an internal Docker network (not exposed externally)
+
+# Define the 'app_data' volume for persistent storage
+volumes:
+  app_data:
