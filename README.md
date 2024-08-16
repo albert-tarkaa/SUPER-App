@@ -12,4 +12,7 @@ Supervised by ***[Dr. Gopal Jamnal](https://www.leedsbeckett.ac.uk/staff/dr-gopa
 
 September, 2024
 
-A detailed documentation exists in each folder and is specific to the folder - backend and frontend
+### Note
+A detailed documentation exists in each folder and is specific to the folder
+- [Backend](https://github.com/albert-tarkaa/SUPER-App/tree/main/backend)
+- [Frontend](https://github.com/albert-tarkaa/SUPER-App/tree/main/frontend)
