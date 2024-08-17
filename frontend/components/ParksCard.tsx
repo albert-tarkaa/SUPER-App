@@ -10,6 +10,7 @@ import {
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
+import LottieView from 'lottie-react-native';
 import AQIColorCode from './AQIColorCode';
 
 const apiKey = process.env.EXPO_PUBLIC_AIR_QUALITY_OPEN_DATA_PLATFORM_API_KEY;
@@ -17,6 +18,45 @@ const apiKey = process.env.EXPO_PUBLIC_AIR_QUALITY_OPEN_DATA_PLATFORM_API_KEY;
 const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
   const [AQIData, setAQIData] = useState(null);
   const [color, setColor] = useState('#009933');
+
+  const hexToRgba = (hex, alpha = 1) => {
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 4) {
+      r = parseInt(hex[1] + hex[1], 16);
+      g = parseInt(hex[2] + hex[2], 16);
+      b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length === 7) {
+      r = parseInt(hex[1] + hex[2], 16);
+      g = parseInt(hex[3] + hex[4], 16);
+      b = parseInt(hex[5] + hex[6], 16);
+    }
+    return [r / 255, g / 255, b / 255, alpha];
+  };
+
+
+  const modifyColorInLottie = (animationData, newHexColor) => {
+    const newColor = hexToRgba(newHexColor);
+
+    const traverse = (obj) => {
+      for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          if (key === 'c' && Array.isArray(obj[key].k)) {
+            obj[key].k = newColor;  // Replace color with new color
+          } else if (typeof obj[key] === 'object') {
+            traverse(obj[key]);
+          }
+        }
+      }
+    };
+
+    traverse(animationData);
+    return animationData;
+  };
+
+  const modifiedAnimationData = modifyColorInLottie(
+    JSON.parse(JSON.stringify(require('@/assets/images/AQI.json'))), // Deep copy the JSON object
+    color // Pass the new hex color here
+  );
 
   const fetchAQIData = async () => {
     try {
@@ -103,7 +143,12 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
         </View>
         <View style={styles.infoContainer}>
           <View style={styles.infoItem}>
-            <Icon source="leaf" size={16} color={color} />
+            <LottieView
+              source={modifiedAnimationData}
+              autoPlay
+              loop
+              style={{ width: 35, height: 35 }}
+            />
             <Text style={styles.infoText}>{AQIInfo?.aqi}</Text>
           </View>
           {renderWeatherInfo()}
@@ -146,14 +191,13 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     position: 'absolute',
-    bottom: 100,
-    left: 8,
-    right: 8,
+    bottom: 98,
     flexDirection: 'row',
     justifyContent: 'space-between',
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 16,
-    padding: 10
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    width: '100%'
   },
   infoItem: {
     flexDirection: 'row',
@@ -162,7 +206,7 @@ const styles = StyleSheet.create({
   infoText: {
     color: '#001B3C',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 16,
     marginLeft: 4
   },
   errorText: {

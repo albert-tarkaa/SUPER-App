@@ -85,8 +85,8 @@ const HomeScreen = () => {
   } = useQuery({
     queryKey: ['parkData'],
     queryFn: fetchparkData,
-    refetchInterval: 86400000, // 24hrs
-    staleTime: 86400000 // 24hrs
+    refetchInterval: 100000, // 24hrs
+    staleTime: 100000 // 24hrs
   });
 
   const {
