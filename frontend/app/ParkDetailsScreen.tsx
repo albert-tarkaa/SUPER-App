@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
@@ -6,26 +6,72 @@ import {
   Avatar,
   Button,
   Card,
-  Chip,
   List,
   Paragraph,
   Title
 } from 'react-native-paper';
-import WeatherInfo from '../components/WeatherInfo';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
+import WeatherDashboard from '@/components/WeatherDashboard';
 
 const ParkDetailsScreen = () => {
   const route = useRoute();
   const { parkDetails } = route.params;
+  const [color, setColor] = useState('#009933');
+
+  console.log(parkDetails.weatherData);
+
+  useEffect(() => {
+    setColor(parkDetails.AQIData.color);
+  }, [parkDetails.AQIData.color]);
+
+  const hexToRgba = (hex, alpha = 1) => {
+    let r = 0,
+      g = 0,
+      b = 0;
+    if (hex.length === 4) {
+      r = parseInt(hex[1] + hex[1], 16);
+      g = parseInt(hex[2] + hex[2], 16);
+      b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length === 7) {
+      r = parseInt(hex[1] + hex[2], 16);
+      g = parseInt(hex[3] + hex[4], 16);
+      b = parseInt(hex[5] + hex[6], 16);
+    }
+    return [r / 255, g / 255, b / 255, alpha];
+  };
+
+  const modifyColorInLottie = (animationData, newHexColor) => {
+    const newColor = hexToRgba(newHexColor);
+    const traverse = (obj) => {
+      for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          if (key === 'c' && Array.isArray(obj[key].k)) {
+            obj[key].k = newColor; // Replace color with new color
+          } else if (typeof obj[key] === 'object') {
+            traverse(obj[key]);
+          }
+        }
+      }
+    };
+
+    traverse(animationData);
+    return animationData;
+  };
+
+  const modifiedAnimationData = modifyColorInLottie(
+    JSON.parse(JSON.stringify(require('@/assets/images/AQI.json'))), // Deep copy the JSON object
+    parkDetails.AQIData.color // Pass the new hex color here
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         {/* Park Info Card: Displays main information about the park */}
-        <Card style={{ backgroundColor: '#fff' }}>
+        <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
           <Card.Cover
-            source={require('@/assets/images/2.png')}
+            source={{ uri: parkDetails.imageUrl }}
             style={styles.cover}
           />
           <Card.Content>
@@ -35,32 +81,53 @@ const ParkDetailsScreen = () => {
                 <Ionicons key={star} name="star" size={16} color="#FFC107" />
               ))}
               <Paragraph>
-                4.5 <Text style={styles.reviewText}>130 reviews</Text>
+                {parkDetails.rating}{' '}
+                <Text style={styles.reviewText}>
+                  {parkDetails.reviewCount} reviews
+                </Text>
               </Paragraph>
             </View>
             <Paragraph style={styles.parkAddress}>
               <Ionicons name="location" size={12} color="green" />
-              {parkDetails.address}
+              {parkDetails.address} | {parkDetails.postcode}
             </Paragraph>
-            <Chip icon="check" style={styles.chip}>
-              Good Air Quality
-            </Chip>
-            <Paragraph style={styles.infoText}>
-              Armley Park is two miles west of Leeds city centre and is
-              approximately 14 hectares in area. It's the perfect location for
-              people of all age ranges to enjoy a relaxing day out. The park
-              gives residents and visitors amazing views over kirkstall valley.
+            <Title style={styles.parkInfoTitle}>Park Info</Title>
+            <Paragraph style={styles.DescriptionText}>
+              {parkDetails.description}
             </Paragraph>
             <View style={styles.infoRow}>
-              <Ionicons name="location" size={16} color="#4CAF50" />
-              <Paragraph>1.1km • Open 7am - 12am</Paragraph>
+              <Paragraph>
+                <Text style={styles.OpenText}>Open</Text>{' '}
+                <Text style={styles.OpenTime}>{parkDetails.openingHours}</Text>
+              </Paragraph>
+            </View>
+
+            <View style={[styles.AQIchip, { borderColor: color }]}>
+              <LottieView
+                source={modifiedAnimationData}
+                autoPlay
+                loop
+                style={styles.animation}
+              />
+              <View style={styles.textContainer}>
+                <Paragraph style={styles.label}>Air Quality Index:</Paragraph>
+                <Paragraph style={[styles.reading, { color }]}>
+                  {parkDetails.AQIData.reading}
+                </Paragraph>
+              </View>
             </View>
           </Card.Content>
         </Card>
 
         {/* Weather Info Component: Shows current weather information for the park */}
-        <WeatherInfo
+        {/* <WeatherInfo
           weatherData={parkDetails.weatherData}
+          error={parkDetails.error}
+          isLoading={parkDetails.isLoading}
+        /> */}
+        <WeatherDashboard
+          weatherData={parkDetails.weatherData}
+          AQIData={parkDetails.AQIData}
           error={parkDetails.error}
           isLoading={parkDetails.isLoading}
         />
@@ -68,38 +135,36 @@ const ParkDetailsScreen = () => {
         {/* Accessibility Card: Lists accessibility features of the park */}
         <Card style={styles.sectionCard}>
           <Card.Content>
-            <Title>Accessibility</Title>
-            <List.Item
-              title="Wheelchair-accessible car park"
-              left={() => <List.Icon icon="check" />}
-            />
-            <List.Item
-              title="Wheelchair-accessible entrance"
-              left={() => <List.Icon icon="check" />}
-            />
+            <Title style={styles.parkDetailsTitle}>Accessibility</Title>
+            {parkDetails.accessibility.map((accessibility) => (
+              <Text key={accessibility} style={styles.text}>
+                {accessibility}
+              </Text>
+            ))}
           </Card.Content>
         </Card>
 
         {/* Children Card: Provides information about the park's suitability for children and pets */}
         <Card style={styles.sectionCard}>
           <Card.Content>
-            <Title>Children</Title>
-            <List.Item
-              title="Good for kids"
-              left={() => <List.Icon icon="check" />}
-            />
-            <List.Item title="Pets" left={() => <List.Icon icon="check" />} />
+            <Title style={styles.parkDetailsTitle}>Children</Title>
+            {parkDetails.childrenFeatures.map((children) => (
+              <Text key={children} style={styles.text}>
+                {children}
+              </Text>
+            ))}
           </Card.Content>
         </Card>
 
         {/* Notice Card: Displays important notices or rules for the park */}
         <Card style={styles.sectionCard}>
           <Card.Content>
-            <Title>Notice</Title>
-            <List.Item
-              title="Dogs allowed"
-              left={() => <List.Icon icon="information" />}
-            />
+            <Title style={styles.parkDetailsTitle}>Notice</Title>
+            {parkDetails.notices.map((notice) => (
+              <Text key={notice} style={styles.text}>
+                {notice}
+              </Text>
+            ))}
           </Card.Content>
         </Card>
 
@@ -172,6 +237,59 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8
   },
+  OpenText: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20.3,
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    color: '#009933'
+  },
+  OpenTime: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20.3,
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    color: '#001B3C'
+  },
+  DescriptionText: {
+    fontSize: 15,
+    fontWeight: '400',
+    lineHeight: 18.9,
+    color: '#909090'
+  },
+  AQIchip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 2,
+    backgroundColor: '#F5F5F5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+    marginBottom: 10
+  },
+  animation: {
+    width: 65,
+    height: 65
+  },
+  textContainer: {
+    marginLeft: 10,
+    flex: 1
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#555555'
+  },
+  reading: {
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
   title: {
     fontSize: 22,
     fontWeight: '600',
@@ -179,6 +297,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     textAlign: 'left',
     marginTop: 8
+  },
+  text: {
+    fontSize: 15,
+    fontWeight: '500',
+    lineHeight: 18.9,
+    marginVertical: 3,
+    color: '#90909A'
   },
   weatherInfo: {
     flexDirection: 'row',
@@ -233,7 +358,8 @@ const styles = StyleSheet.create({
     marginVertical: 10
   },
   sectionCard: {
-    margin: 16,
+    marginHorizontal: 10,
+    marginVertical: 5,
     backgroundColor: '#FFFFFF'
   },
   nearbyPlaces: {
@@ -245,5 +371,20 @@ const styles = StyleSheet.create({
   },
   smallText: {
     fontSize: 12
+  },
+  parkDetailsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 18,
+    letterSpacing: 0.25,
+    color: '#0B1E4B'
+  },
+  parkInfoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 18,
+    letterSpacing: 0.25,
+    color: '#0B1E4B',
+    marginVertical: 8
   }
 });

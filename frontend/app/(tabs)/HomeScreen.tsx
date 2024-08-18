@@ -100,8 +100,8 @@ const HomeScreen = () => {
     staleTime: 86400000 //24hrs
   });
 
-  const handleParkPress = (parkDetails) => {
-    navigation.navigate('ParkDetailsScreen', { parkDetails });
+  const handleParkPress = (data) => {
+    navigation.navigate('ParkDetailsScreen', { parkDetails: data.parkDetails });
   };
 
   if (isParkLoading || isWeatherLoading) return <Text>Loading...</Text>;
@@ -132,12 +132,7 @@ const HomeScreen = () => {
                 weatherData={weatherData}
                 isLoading={false}
                 error={null}
-                onPress={() =>
-                  handleParkPress({
-                    ...park,
-                    weatherData: weatherData ? weatherData[park.id] : null
-                  })
-                }
+                onPress={handleParkPress}
               />
             ))
           ) : (

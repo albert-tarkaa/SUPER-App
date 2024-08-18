@@ -11,13 +11,14 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import LottieView from 'lottie-react-native';
-import AQIColorCode from './AQIColorCode';
+import getAirQualityInfo from './Utils/AQIColorCode';
 
 const apiKey = process.env.EXPO_PUBLIC_AIR_QUALITY_OPEN_DATA_PLATFORM_API_KEY;
 
 const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
   const [AQIData, setAQIData] = useState(null);
   const [color, setColor] = useState('#009933');
+  const [AQIReading, setAQIReading] = useState('');
 
   const hexToRgba = (hex, alpha = 1) => {
     let r = 0, g = 0, b = 0;
@@ -32,7 +33,6 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
     }
     return [r / 255, g / 255, b / 255, alpha];
   };
-
 
   const modifyColorInLottie = (animationData, newHexColor) => {
     const newColor = hexToRgba(newHexColor);
@@ -92,7 +92,9 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
   useEffect(() => {
     if (AQIInfo) {
       setAQIData(AQIInfo);
-      setColor(AQIColorCode(AQIInfo.aqi));
+      const { color, text } = getAirQualityInfo(AQIInfo.aqi);
+      setAQIReading(text);
+      setColor(color);
     }
   }, [AQIInfo]);
 
@@ -131,10 +133,23 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
     return null;
   };
 
+  const handlePress = () => {
+    const parkDetailsWithAQI = {
+      ...park,
+      weatherData,
+      AQIData: {
+        aqi: AQIInfo?.aqi,
+        color,
+        reading: AQIReading
+      }
+    };
+    onPress({ parkDetails: parkDetailsWithAQI });
+  };
+
   if (AQIError) return <Text>An error occurred: {AQIError.message}</Text>;
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
       <Card style={styles.card}>
         <Card.Cover source={{ uri: park.imageUrl }} />
         <View style={styles.ratingContainer}>
