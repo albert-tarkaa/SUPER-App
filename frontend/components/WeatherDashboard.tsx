@@ -43,15 +43,15 @@ const WeatherApp = ({ weatherData, AQIData, error, isLoading }) => {
 
     return (
       <Card style={styles.container}>
+        <Image
+          source={{ uri: weatherIconUrl }}
+          style={styles.temperatureIcon}
+        />
         <View style={styles.temperatureContainer}>
-          <Image
-            source={{ uri: weatherIconUrl }}
-            style={styles.temperatureIcon}
-          />
           <View style={styles.temperatureReadingContainer}>
-            <Text style={styles.temperature}>{tempCelsius}°C</Text>
+            <Text style={styles.temperature}>{tempCelsius}°C </Text>
             <Text style={styles.realFeel}>
-              Feels like {tempFeelCelsius}°C {'\n'}
+              Feels like {tempFeelCelsius}°C{'\n'}
               {description.charAt(0).toUpperCase() + description.slice(1)}
               {'\n'}
               Max: {tempMaxCelsius}
@@ -60,11 +60,8 @@ const WeatherApp = ({ weatherData, AQIData, error, isLoading }) => {
             </Text>
           </View>
         </View>
-        <View style={styles.detailsContainer}>
-          <View style={styles.detailsHeader}>
-            <Text style={{ color: textColor }}>Details:</Text>
-            <Text style={styles.detailsLink}> OpenWeatherMap.org</Text>
-          </View>
+        <View>
+          <View style={styles.detailsHeader}></View>
           <View style={styles.detailsRow}>
             <View style={[styles.AQIchip, { backgroundColor: color }]}>
               <Text style={styles.detailTitle}>Air Quality Index</Text>
@@ -143,12 +140,12 @@ const styles = StyleSheet.create({
   },
   temperatureReadingContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '75%'
+    justifyContent: 'space-between',
+    width: '85%'
   },
   temperatureContainer: {
     flexDirection: 'row',
-    marginBottom: 20
+    marginBottom: 5
   },
   temperatureIcon: {
     width: 60,
@@ -156,14 +153,14 @@ const styles = StyleSheet.create({
   },
   temperature: {
     fontSize: 30,
-    fontWeight: 'bold',
+    fontWeight: '500',
     color: textColor,
     lineHeight: 35
   },
   realFeel: {
     fontSize: 15,
     color: textColor,
-    fontWeight: '600'
+    fontWeight: '500'
   },
   detailsContainer: {
     backgroundColor: '#E6F3E8', // Light green background

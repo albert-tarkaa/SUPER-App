@@ -101,30 +101,10 @@ const ParkDetailsScreen = () => {
                 <Text style={styles.OpenTime}>{parkDetails.openingHours}</Text>
               </Paragraph>
             </View>
-
-            <View style={[styles.AQIchip, { borderColor: color }]}>
-              <LottieView
-                source={modifiedAnimationData}
-                autoPlay
-                loop
-                style={styles.animation}
-              />
-              <View style={styles.textContainer}>
-                <Paragraph style={styles.label}>Air Quality Index:</Paragraph>
-                <Paragraph style={[styles.reading, { color }]}>
-                  {parkDetails.AQIData.reading}
-                </Paragraph>
-              </View>
-            </View>
           </Card.Content>
         </Card>
-
-        {/* Weather Info Component: Shows current weather information for the park */}
-        {/* <WeatherInfo
-          weatherData={parkDetails.weatherData}
-          error={parkDetails.error}
-          isLoading={parkDetails.isLoading}
-        /> */}
+          
+          {/* Weather Dashboard Card: Displays weather and air quality information */}
         <WeatherDashboard
           weatherData={parkDetails.weatherData}
           AQIData={parkDetails.AQIData}
