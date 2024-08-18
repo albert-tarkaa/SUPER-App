@@ -20,8 +20,6 @@ const ParkDetailsScreen = () => {
   const { parkDetails } = route.params;
   const [color, setColor] = useState('#009933');
 
-  console.log(parkDetails.weatherData);
-
   useEffect(() => {
     setColor(parkDetails.AQIData.color);
   }, [parkDetails.AQIData.color]);
