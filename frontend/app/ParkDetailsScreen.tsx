@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import WeatherDashboard from '@/components/WeatherDashboard';
+import Events from '@/components/Events';
 
 const ParkDetailsScreen = () => {
   const route = useRoute();
@@ -177,11 +178,7 @@ const ParkDetailsScreen = () => {
         <Card style={styles.sectionCard}>
           <Card.Content>
             <Title>Events Nearby</Title>
-            <List.Item
-              title="Bird watching Club picnic"
-              description="Mon 10th June | 10am - 5pm"
-              left={() => <Avatar.Icon size={40} icon="bird" />}
-            />
+            <Events />
           </Card.Content>
         </Card>
 
