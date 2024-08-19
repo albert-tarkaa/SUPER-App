@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   bottomSheetbuttonLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    padding: 1
+    padding: 2
   },
   bottomSheetHandle: {
     backgroundColor: '#8BC954',
