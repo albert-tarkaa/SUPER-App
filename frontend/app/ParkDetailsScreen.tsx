@@ -344,12 +344,12 @@ const styles = StyleSheet.create({
   },
   bottomSheetbutton: {
     width: '100%',
-    marginTop: 2
+    marginTop: 1
   },
   bottomSheetbuttonLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    padding: 2
+    padding: 1
   },
   bottomSheetHandle: {
     backgroundColor: '#8BC954',

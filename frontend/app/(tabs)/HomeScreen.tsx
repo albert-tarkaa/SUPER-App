@@ -41,9 +41,7 @@ const HomeScreen = () => {
   const [errorMsg, setErrorMsg] = useState(null);
 
   const dispatch = useDispatch();
-  const { latitude, longitude, isLoading, error } = useSelector(
-    (state) => state.location
-  );
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     let watchId = null;
@@ -131,7 +129,8 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        Let's find the best places and events for you
+        Let's find the best places and events for you to explore{' '}
+        {isAuthenticated && `, ${user?.firstName} 🌴🌻`}
       </Text>
 
       <Searchbar
@@ -188,7 +187,7 @@ const styles = StyleSheet.create({
     marginTop: 4
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '600',
     padding: 10,
     lineHeight: 32,

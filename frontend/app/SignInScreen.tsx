@@ -20,8 +20,6 @@ const SignInScreen = () => {
 
   const dispatch = useDispatch();
   const { isLoading, error, isAuthenticated, user } = useSelector((state) => state.auth);
-  const aaaa = useSelector((state) => state.auth);
-  console.log({aaaa});
 
   const handleLogin = async () => {
     const processedUsername = username.trim().toLowerCase();

@@ -18,6 +18,8 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
+      }, "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -47,7 +49,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow the SUPER app to access your location to provide better service."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
@@ -56,7 +59,7 @@
       "router": {
         "origin": false
       },
-    "eas": {
+      "eas": {
         "projectId": "a25f5217-2e3f-4461-b25e-6491952d03e1"
       }
     },

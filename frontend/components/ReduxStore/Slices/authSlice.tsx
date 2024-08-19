@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import * as Keychain from 'react-native-keychain';
+import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
@@ -14,7 +14,7 @@ export const login = createAsyncThunk(
       });
 
       // Extract authToken and refreshToken
-      const { authToken, refreshToken, data } = response.data;
+      const { data } = response.data;
       // Destructure user data
       const {
         firstName,
@@ -23,13 +23,17 @@ export const login = createAsyncThunk(
         gender,
         role,
         userId,
-        profileComplete
+        profileComplete,
+        authToken,
+        refreshToken
       } = data;
 
+      const credentials = { authToken, refreshToken };
+      const credentialsString = JSON.stringify(credentials);
       try {
-        await Keychain.setGenericPassword(authToken, refreshToken);
-      } catch (keychainError) {
-        console.error('Failed to save to Keychain:', keychainError);
+        await SecureStore.setItemAsync('auth', credentialsString);
+      } catch (error) {
+        console.error('Failed to save to Keychain:', error);
       }
 
       // Return user data including tokens
