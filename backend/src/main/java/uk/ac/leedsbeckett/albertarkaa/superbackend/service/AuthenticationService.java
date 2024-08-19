@@ -85,7 +85,27 @@ public class AuthenticationService {
                     .build();
             userRepository.save(user);
 
-            return new ControllerResponse<>(true, null,"User registered successfully");
+            //Login the user
+            user.setLastLogin(LocalDateTime.now());
+            userRepository.save(user);
+
+            // Generate JWT tokens
+            String jwtToken = jwtService.generateToken(user);
+            String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+
+            RefreshTokenService.saveToken(user.getId(), refreshToken);
+
+            return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
+                    .authToken(jwtToken)
+                    .refreshToken(refreshToken)
+                    .username(user.getUsername())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .gender(user.getGender())
+                    .dob(user.getDob())
+                    .role(user.getRole().name())
+                    .userId(user.getId())
+                    .build());
         } catch (Exception e) {
             logger.error("An error occurred", e);
             return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
@@ -126,6 +146,7 @@ public class AuthenticationService {
                     .gender(user.getGender())
                     .dob(user.getDob())
                     .role(user.getRole().name())
+                    .userId(user.getId())
                     .build());
         } catch (Exception e) {
             logger.error("An error occurred", e);
@@ -150,6 +171,7 @@ public class AuthenticationService {
                     .refreshToken(jwtService.generateRefreshToken(username))
                     .username(user.get().getUsername())
                     .role(user.get().getRole().name())
+                    .userId(user.get().getId())
                     .build());
         } catch (Exception e) {
             logger.error("An error occurred", e);
@@ -198,19 +220,16 @@ public class AuthenticationService {
         try {
             String username = jwtService.extractUsername(token);
             Optional<UserModel> user = userRepository.findByUsername(username);
-            if (user.isEmpty()) {
-                return new ControllerResponse<>(false, "Invalid  account details", null);
-            }
-
-            return new ControllerResponse<>(true, null, UserResponse.builder()
-                    .username(user.get().getUsername())
-                    .firstName(user.get().getFirstName())
-                    .lastName(user.get().getLastName())
-                    .dob(user.get().getDob())
-                    .gender(user.get().getGender())
-                    .role(user.get().getRole().name())
+            return user.<ControllerResponse<Object>>map(userModel -> new ControllerResponse<>(true, null, UserResponse.builder()
+                    .username(userModel.getUsername())
+                    .firstName(userModel.getFirstName())
+                    .lastName(userModel.getLastName())
+                    .dob(userModel.getDob())
+                    .gender(userModel.getGender())
+                    .role(userModel.getRole().name())
                     .authToken(token)
-                    .build());
+                    .userId(userModel.getId())
+                    .build())).orElseGet(() -> new ControllerResponse<>(false, "Invalid  account details", null));
 
         } catch (Exception e) {
             logger.error("An error occurred", e);

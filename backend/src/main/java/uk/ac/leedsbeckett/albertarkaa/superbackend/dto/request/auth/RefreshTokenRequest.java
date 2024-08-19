@@ -15,7 +15,7 @@ public class RefreshTokenRequest {
     @NotBlank(message = "Refresh Token cannot be null")
     private String refreshToken;
 
-    @NotBlank(message = "createdBy cannot be null")
+    @NotBlank(message = "userId cannot be null")
     private String userId;
 
 }
