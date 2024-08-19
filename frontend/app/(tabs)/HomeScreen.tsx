@@ -105,9 +105,6 @@ const HomeScreen = () => {
     navigation.navigate('ParkDetailsScreen', { parkDetails: data.parkDetails });
   };
 
-  console.log('isParkLoading', isParkLoading);
-  console.log('isWeatherLoading', isWeatherLoading);
-
   if (isParkLoading || isWeatherLoading)
     return (
       <LottieView

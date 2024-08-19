@@ -61,6 +61,13 @@ public class RefreshTokenService {
         return token.getExpiryDate().compareTo(Instant.now())<0;
     }
 
+    // Find a refresh token by user id
+    boolean validateToken(UUID userId, String token){
+        Optional<RefreshTokenModel> refreshToken = refreshTokenRepository.findByUserId(userId);
+        //does token exist and belong to user
+        return refreshToken.isPresent() && refreshToken.get().getUserId().equals(userId);
+    }
+
     public Optional<RefreshTokenModel> findByUserId(UUID userId) {
         return refreshTokenRepository.findByUserId(userId);
     }

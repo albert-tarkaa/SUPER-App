@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,7 +17,7 @@ public class RefreshTokenRequest {
     @NotBlank(message = "Refresh Token cannot be null")
     private String refreshToken;
 
-    @NotBlank(message = "createdBy cannot be null")
-    private String userId;
+    @NotBlank(message = "userId cannot be null")
+    private UUID userId;
 
 }

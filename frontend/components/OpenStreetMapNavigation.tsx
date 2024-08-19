@@ -459,16 +459,16 @@ const styles = StyleSheet.create({
   bottomSheetInstructions: {
     flex: 1
   },
+  instructionsContainer: {
+    paddingBottom: 20 // Add some padding at the bottom for better scrolling
+  },
   selectorContainer: {
     flexDirection: 'row',
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#cfebc3',
     padding: 10,
     borderRadius: 10,
     justifyContent: 'space-between'
-  },
-  instructionsContainer: {
-    paddingBottom: 20 // Add some padding at the bottom for better scrolling
   },
   modeButton: {
     paddingVertical: 8,

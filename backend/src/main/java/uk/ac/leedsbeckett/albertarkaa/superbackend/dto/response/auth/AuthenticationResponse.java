@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -20,4 +21,6 @@ public class AuthenticationResponse {
     private LocalDate dob;
     private String gender;
     private String role;
+    private UUID userId;
+    private boolean isProfileComplete;
 }

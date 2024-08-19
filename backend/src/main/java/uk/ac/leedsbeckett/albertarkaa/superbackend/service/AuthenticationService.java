@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.AuthenticationRequest;
+import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.RefreshTokenRequest;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.RegisterRequest;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.ResetPasswordRequest;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.response.ControllerResponse;
@@ -26,6 +27,7 @@ import uk.ac.leedsbeckett.albertarkaa.superbackend.util.Authentication.Role;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -85,7 +87,27 @@ public class AuthenticationService {
                     .build();
             userRepository.save(user);
 
-            return new ControllerResponse<>(true, null,"User registered successfully");
+            //Login the user
+            user.setLastLogin(LocalDateTime.now());
+            userRepository.save(user);
+
+            // Generate JWT tokens
+            String jwtToken = jwtService.generateToken(user);
+            String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+
+            RefreshTokenService.saveToken(user.getId(), refreshToken);
+
+            return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
+                    .authToken(jwtToken)
+                    .refreshToken(refreshToken)
+                    .username(user.getUsername())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .gender(user.getGender())
+                    .dob(user.getDob())
+                    .role(user.getRole().name())
+                    .userId(user.getId())
+                    .build());
         } catch (Exception e) {
             logger.error("An error occurred", e);
             return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
@@ -126,6 +148,8 @@ public class AuthenticationService {
                     .gender(user.getGender())
                     .dob(user.getDob())
                     .role(user.getRole().name())
+                    .userId(user.getId())
+                    .isProfileComplete(user.isProfileComplete())
                     .build());
         } catch (Exception e) {
             logger.error("An error occurred", e);
@@ -135,21 +159,33 @@ public class AuthenticationService {
     }
 
     // This method is used to refresh the JWT token
-    public ControllerResponse<AuthenticationResponse> refresh(String token) {
+    public ControllerResponse<AuthenticationResponse> refresh(RefreshTokenRequest refreshTokenRequest) {
         try {
-            String username = jwtService.extractUsername(token.substring(7)); //remove Bearer from token
-            Optional<UserModel> user = userRepository.findByUsername(username);
+            UUID userId = refreshTokenRequest.getUserId();
+            String token = refreshTokenRequest.getRefreshToken();
+            Optional<UserModel> user = userRepository.findById(userId);
 
             if (user.isEmpty()) {
                 return new ControllerResponse<>(false, "Invalid  account details", null);
             }
 
+            if (!user.get().isProfileComplete()){
+                return new ControllerResponse<>(false, "Please complete your profile", null);
+            }
+
+            if (!RefreshTokenService.validateToken(userId, token)) {
+                return new ControllerResponse<>(false, "Invalid refresh token", null);
+            }
+
+
+
             var jwtToken = jwtService.generateToken(user.get());
             return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
                     .authToken(jwtToken)
-                    .refreshToken(jwtService.generateRefreshToken(username))
+                    .refreshToken(jwtService.generateRefreshToken(user.get().getUsername()))
                     .username(user.get().getUsername())
                     .role(user.get().getRole().name())
+                    .userId(user.get().getId())
                     .build());
         } catch (Exception e) {
             logger.error("An error occurred", e);
@@ -198,19 +234,17 @@ public class AuthenticationService {
         try {
             String username = jwtService.extractUsername(token);
             Optional<UserModel> user = userRepository.findByUsername(username);
-            if (user.isEmpty()) {
-                return new ControllerResponse<>(false, "Invalid  account details", null);
-            }
-
-            return new ControllerResponse<>(true, null, UserResponse.builder()
-                    .username(user.get().getUsername())
-                    .firstName(user.get().getFirstName())
-                    .lastName(user.get().getLastName())
-                    .dob(user.get().getDob())
-                    .gender(user.get().getGender())
-                    .role(user.get().getRole().name())
+            return user.<ControllerResponse<Object>>map(userModel -> new ControllerResponse<>(true, null, UserResponse.builder()
+                    .username(userModel.getUsername())
+                    .firstName(userModel.getFirstName())
+                    .lastName(userModel.getLastName())
+                    .dob(userModel.getDob())
+                    .gender(userModel.getGender())
+                    .role(userModel.getRole().name())
+                    .isProfileComplete(userModel.isProfileComplete())
                     .authToken(token)
-                    .build());
+                    .userId(userModel.getId())
+                    .build())).orElseGet(() -> new ControllerResponse<>(false, "Invalid  account details", null));
 
         } catch (Exception e) {
             logger.error("An error occurred", e);
@@ -274,5 +308,4 @@ public class AuthenticationService {
                     .build();
         }
     }
-
 }
