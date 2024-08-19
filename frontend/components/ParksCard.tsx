@@ -11,16 +11,20 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import LottieView from 'lottie-react-native';
-import AQIColorCode from './AQIColorCode';
+import getAirQualityInfo from './Utils/AQIColorCode';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const apiKey = process.env.EXPO_PUBLIC_AIR_QUALITY_OPEN_DATA_PLATFORM_API_KEY;
 
 const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
   const [AQIData, setAQIData] = useState(null);
   const [color, setColor] = useState('#009933');
+  const [AQIReading, setAQIReading] = useState('');
 
   const hexToRgba = (hex, alpha = 1) => {
-    let r = 0, g = 0, b = 0;
+    let r = 0,
+      g = 0,
+      b = 0;
     if (hex.length === 4) {
       r = parseInt(hex[1] + hex[1], 16);
       g = parseInt(hex[2] + hex[2], 16);
@@ -33,7 +37,6 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
     return [r / 255, g / 255, b / 255, alpha];
   };
 
-
   const modifyColorInLottie = (animationData, newHexColor) => {
     const newColor = hexToRgba(newHexColor);
 
@@ -41,7 +44,7 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
       for (let key in obj) {
         if (obj.hasOwnProperty(key)) {
           if (key === 'c' && Array.isArray(obj[key].k)) {
-            obj[key].k = newColor;  // Replace color with new color
+            obj[key].k = newColor; // Replace color with new color
           } else if (typeof obj[key] === 'object') {
             traverse(obj[key]);
           }
@@ -92,7 +95,9 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
   useEffect(() => {
     if (AQIInfo) {
       setAQIData(AQIInfo);
-      setColor(AQIColorCode(AQIInfo.aqi));
+      const { color, text } = getAirQualityInfo(AQIInfo.aqi);
+      setAQIReading(text);
+      setColor(color);
     }
   }, [AQIInfo]);
 
@@ -131,10 +136,40 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
     return null;
   };
 
+  const handlePress = () => {
+    const parkDetailsWithAQI = {
+      ...park,
+      weatherData,
+      AQIData: {
+        aqi: AQIInfo?.aqi,
+        color,
+        reading: AQIReading
+      }
+    };
+    onPress({ parkDetails: parkDetailsWithAQI });
+  };
+
+  const renderSkeletonCards = () => {
+    return Array(3)
+      .fill()
+      .map((_, index) => (
+        <Card key={index} style={styles.skeletonCard}>
+          <Card.Content>
+            <View style={styles.skeletonTitle} />
+            <View style={styles.skeletonText} />
+            <View style={styles.skeletonText} />
+          </Card.Content>
+        </Card>
+      ));
+  };
+
+  if (AQILoading) {
+    return <SafeAreaView>{renderSkeletonCards()}</SafeAreaView>;
+  }
   if (AQIError) return <Text>An error occurred: {AQIError.message}</Text>;
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
       <Card style={styles.card}>
         <Card.Cover source={{ uri: park.imageUrl }} />
         <View style={styles.ratingContainer}>
@@ -168,6 +203,24 @@ const styles = StyleSheet.create({
     margin: 16,
     marginTop: 0
   },
+  skeletonCard: {
+    marginBottom: 10,
+    elevation: 4
+  },
+  skeletonTitle: {
+    height: 24,
+    backgroundColor: '#E0E0E0',
+    marginBottom: 8,
+    borderRadius: 4
+  },
+  skeletonText: {
+    height: 16,
+    backgroundColor: '#E0E0E0',
+    marginBottom: 8,
+    borderRadius: 4,
+    width: '80%'
+  },
+
   ratingContainer: {
     position: 'absolute',
     top: 8,

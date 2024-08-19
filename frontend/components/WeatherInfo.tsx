@@ -1,40 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { Text, Animated, StyleSheet } from 'react-native';
+import React from 'react';
+import { Text, StyleSheet, View } from 'react-native';
 import { Chip } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import Icon from '@expo/vector-icons/MaterialCommunityIcons';
 import { getWeatherIcon, getWeatherColor } from './Utils/weatherUtlis';
 
-const AnimatedChip = Animated.createAnimatedComponent(Chip);
-
 const WeatherInfo = ({ weatherData, error, isLoading }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (weatherData) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true
-      }).start();
-
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(scaleAnim, {
-            toValue: 1.1,
-            duration: 1000,
-            useNativeDriver: true
-          }),
-          Animated.timing(scaleAnim, {
-            toValue: 1,
-            duration: 5000,
-            useNativeDriver: true
-          })
-        ])
-      ).start();
-    }
-  }, [weatherData]);
-
   if (isLoading) {
     return <Text style={styles.loadingText}>Loading weather data...</Text>;
   }
@@ -46,66 +16,70 @@ const WeatherInfo = ({ weatherData, error, isLoading }) => {
   if (weatherData) {
     const tempCelsius = Math.round(weatherData.main.temp - 273.15);
     const windSpeedKmh = Math.round(weatherData.wind.speed * 3.6);
-    const weatherColor = getWeatherColor(weatherData.weather[0].main);
+    const weatherCondition = weatherData.weather[0].main;
+    const weatherIcon = getWeatherIcon(weatherCondition);
+    const weatherColor = getWeatherColor(weatherCondition);
 
     return (
-      <Animated.View style={[styles.weatherInfo, { opacity: fadeAnim }]}>
-        <AnimatedChip
-          icon={() => (
-            <Ionicons
-              name={getWeatherIcon(weatherData.weather[0].icon)}
-              size={20}
-              color={weatherColor}
-            />
-          )}
-          style={[styles.chip, { backgroundColor: weatherColor + '20' }]}
-          textStyle={{ color: weatherColor }}
-        >
-          {weatherData.weather[0].main}
-        </AnimatedChip>
-        <AnimatedChip
-          icon="thermometer"
-          style={[
-            styles.chip,
-            {
-              transform: [{ scale: scaleAnim }]
-            }
-          ]}
-        >
-          {tempCelsius}°C
-        </AnimatedChip>
-        <AnimatedChip icon="weather-windy" style={styles.chip}>
-          {windSpeedKmh} mph
-        </AnimatedChip>
-        <AnimatedChip icon="water-percent" style={styles.chip}>
-          {weatherData.main.humidity}%
-        </AnimatedChip>
-      </Animated.View>
+      <View style={[styles.weatherInfo, { backgroundColor: weatherColor }]}>
+        <View style={styles.weatherMain}>
+          <Icon name={weatherIcon} size={40} color="#FFFFFF" />
+          <Text style={styles.tempText}>{tempCelsius}°C</Text>
+        </View>
+        <View style={styles.chipContainer}>
+          <Chip style={styles.chip}>{windSpeedKmh} mph</Chip>
+          <Chip style={styles.chip}>{weatherData.main.humidity}%</Chip>
+        </View>
+      </View>
     );
   }
 
   return null;
 };
 
-export default WeatherInfo;
-
 const styles = StyleSheet.create({
-  chip: {
-    marginRight: 8,
-    marginBottom: 8
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    marginVertical: 10
+  weatherInfo: {
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3
   },
   loadingText: {
-    textAlign: 'center',
-    marginVertical: 10
+    fontSize: 16,
+    color: '#888'
   },
-  weatherInfo: {
+  errorText: {
+    fontSize: 16,
+    color: '#FF0000'
+  },
+  weatherMain: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginVertical: 8
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  tempText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginLeft: 10
+  },
+  chipContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%'
+  },
+  chip: {
+    backgroundColor: '#FFFFFF',
+    fontSize: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5
   }
 });
+
+export default WeatherInfo;

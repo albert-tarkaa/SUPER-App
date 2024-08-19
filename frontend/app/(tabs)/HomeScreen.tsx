@@ -7,6 +7,7 @@ import { fetchWeatherData } from '@/components/Utils/api';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import * as Location from 'expo-location';
+import LottieView from 'lottie-react-native';
 
 const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -100,11 +101,21 @@ const HomeScreen = () => {
     staleTime: 86400000 //24hrs
   });
 
-  const handleParkPress = (parkDetails) => {
-    navigation.navigate('ParkDetailsScreen', { parkDetails });
+  const handleParkPress = (data) => {
+    navigation.navigate('ParkDetailsScreen', { parkDetails: data.parkDetails });
   };
 
-  if (isParkLoading || isWeatherLoading) return <Text>Loading...</Text>;
+  console.log('isParkLoading', isParkLoading);
+  console.log('isWeatherLoading', isWeatherLoading);
+
+  if (isParkLoading || isWeatherLoading)
+    return (
+      <LottieView
+        source={require('@/assets/images/SUPER.json')}
+        autoPlay
+        loop
+      />
+    );
   if (ParkError) return <Text>An error occurred: {ParkError.message}</Text>;
   if (weatherError)
     return <Text>An error occurred: {weatherError.message}</Text>;
@@ -130,14 +141,9 @@ const HomeScreen = () => {
                 key={park.id}
                 park={park}
                 weatherData={weatherData}
-                isLoading={false}
+                isLoading={isParkLoading || isWeatherLoading}
                 error={null}
-                onPress={() =>
-                  handleParkPress({
-                    ...park,
-                    weatherData: weatherData ? weatherData[park.id] : null
-                  })
-                }
+                onPress={handleParkPress}
               />
             ))
           ) : (
@@ -148,8 +154,6 @@ const HomeScreen = () => {
     </View>
   );
 };
-
-export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
