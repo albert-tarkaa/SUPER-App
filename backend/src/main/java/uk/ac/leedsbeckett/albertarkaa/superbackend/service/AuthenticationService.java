@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -151,11 +152,14 @@ public class AuthenticationService {
                     .userId(user.getId())
                     .isProfileComplete(user.isProfileComplete())
                     .build());
+        } catch (BadCredentialsException e) {
+            // Handle invalid authentication details
+            return new ControllerResponse<>(false, "Invalid username or password", null);
         } catch (Exception e) {
+            // Handle any other unexpected errors
             logger.error("An error occurred", e);
             return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
         }
-
     }
 
     // This method is used to refresh the JWT token
