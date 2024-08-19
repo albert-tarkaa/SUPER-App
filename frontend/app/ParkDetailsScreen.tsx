@@ -2,17 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
-import {
-  Avatar,
-  Button,
-  Card,
-  List,
-  Paragraph,
-  Title
-} from 'react-native-paper';
+import { Button, Card, Paragraph, Title } from 'react-native-paper';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import LottieView from 'lottie-react-native';
 import WeatherDashboard from '@/components/WeatherDashboard';
 import Events from '@/components/Events';
 
@@ -24,45 +16,6 @@ const ParkDetailsScreen = () => {
   useEffect(() => {
     setColor(parkDetails.AQIData.color);
   }, [parkDetails.AQIData.color]);
-
-  const hexToRgba = (hex, alpha = 1) => {
-    let r = 0,
-      g = 0,
-      b = 0;
-    if (hex.length === 4) {
-      r = parseInt(hex[1] + hex[1], 16);
-      g = parseInt(hex[2] + hex[2], 16);
-      b = parseInt(hex[3] + hex[3], 16);
-    } else if (hex.length === 7) {
-      r = parseInt(hex[1] + hex[2], 16);
-      g = parseInt(hex[3] + hex[4], 16);
-      b = parseInt(hex[5] + hex[6], 16);
-    }
-    return [r / 255, g / 255, b / 255, alpha];
-  };
-
-  const modifyColorInLottie = (animationData, newHexColor) => {
-    const newColor = hexToRgba(newHexColor);
-    const traverse = (obj) => {
-      for (let key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          if (key === 'c' && Array.isArray(obj[key].k)) {
-            obj[key].k = newColor; // Replace color with new color
-          } else if (typeof obj[key] === 'object') {
-            traverse(obj[key]);
-          }
-        }
-      }
-    };
-
-    traverse(animationData);
-    return animationData;
-  };
-
-  const modifiedAnimationData = modifyColorInLottie(
-    JSON.parse(JSON.stringify(require('@/assets/images/AQI.json'))), // Deep copy the JSON object
-    parkDetails.AQIData.color // Pass the new hex color here
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -102,8 +55,8 @@ const ParkDetailsScreen = () => {
             </View>
           </Card.Content>
         </Card>
-          
-          {/* Weather Dashboard Card: Displays weather and air quality information */}
+
+        {/* Weather Dashboard Card: Displays weather and air quality information */}
         <WeatherDashboard
           weatherData={parkDetails.weatherData}
           AQIData={parkDetails.AQIData}
