@@ -14,6 +14,9 @@ import { Audio } from 'expo-av';
 import { MaterialIcons } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUserLocation } from '@/components/ReduxStore/Slices/locationSlice';
+import { debounce, isEqual } from 'lodash';
 
 type Location = {
   latitude: number;
@@ -59,7 +62,14 @@ const OpenStreetMapNavigation = ({
   );
 
   // Initialize currentLocation with a default value or null
-  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const { latitude, longitude } = useSelector((state) => state.location);
+
+  //currentLocation only changes when latitude or longitude actually changes, not on every render.
+  const currentLocation = useMemo(
+    () => (latitude && longitude ? { latitude, longitude } : null),
+    [latitude, longitude]
+  );
+
   const [errorMsg, setErrorMsg] = useState(null);
   const [instructions, setInstructions] = useState([]);
   const [route, setRoute] = useState(null);
@@ -71,117 +81,186 @@ const OpenStreetMapNavigation = ({
   const [isNavigating, setIsNavigating] = useState(false);
 
   const mapRef = useRef(null);
+  const dispatch = useDispatch();
   const soundObject = useRef(new Audio.Sound());
   const bottomSheetRef = useRef(null);
+  const getRouteRef = useRef(null);
+  const getRouteTimeoutRef = useRef(null);
 
   const snapPoints = useMemo(() => ['20%', '50%', '75%'], []);
+  const previousRequestRef = useRef({
+    currentLocation: null,
+    transportMode: null,
+    destination: null
+  });
+  const locationSubscriptionRef = useRef(null);
+
+  const debouncedGetRoute = useCallback(
+    debounce((location) => {
+      if (location) {
+        getRoute(location);
+      }
+    }, 1000),
+    [transportMode, destination]
+  );
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
+    let isMounted = true;
+
+    const setupLocationTracking = async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setErrorMsg('Permission to access location was denied');
+          return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        if (isMounted) {
+          dispatch(updateUserLocation(location.coords));
+          debouncedGetRoute(location.coords);
+        }
+
+        locationSubscriptionRef.current = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.Balanced,
+            distanceInterval: 20, // Increased to reduce frequency
+            timeInterval: 10000 // 10 seconds
+          },
+          (newLocation) => {
+            if (isMounted) {
+              dispatch(updateUserLocation(newLocation.coords));
+              debouncedGetRoute(newLocation.coords);
+              if (isNavigating) {
+                updateCurrentInstruction(newLocation.coords);
+              }
+            }
+          }
+        );
+      } catch (err) {
+        console.error('Error setting up location tracking:', err);
+      }
+    };
+
+    setupLocationTracking();
+
+    return () => {
+      isMounted = false;
+      if (locationSubscriptionRef.current) {
+        locationSubscriptionRef.current.remove();
+      }
+      debouncedGetRoute.cancel();
+    };
+  }, [dispatch, isNavigating, debouncedGetRoute]);
+
+  const getRoute = useCallback(
+    async (currentLocation) => {
+      if (!currentLocation) return;
+
+      // Check if the request parameters have changed
+      if (
+        isEqual(previousRequestRef.current.currentLocation, currentLocation) &&
+        previousRequestRef.current.transportMode === transportMode &&
+        isEqual(previousRequestRef.current.destination, destination)
+      ) {
+        console.log('Skipping API call - no changes in parameters');
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setCurrentLocation(location.coords);
+      try {
+        const OPENROUTE_API_KEY = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY;
 
-      Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          distanceInterval: 10
-        },
-        (location) => {
-          setCurrentLocation(location.coords);
-          if (isNavigating) {
-            updateCurrentInstruction(location.coords);
-          }
+        if (!OPENROUTE_API_KEY) {
+          throw new Error('Missing OpenRoute API key');
         }
-      );
-    })();
 
-    return () => {
-      if (soundObject.current) {
-        soundObject.current.unloadAsync();
-      }
-    };
-  }, [isNavigating]);
+        // Cancel any ongoing requests
+        if (getRouteRef.current) {
+          getRouteRef.current.cancel('New request initiated');
+        }
 
-  useEffect(() => {
-    if (currentLocation) {
-      getRoute();
-    }
-  }, [currentLocation, transportMode]);
+        // Create a new cancelable request
+        getRouteRef.current = axios.CancelToken.source();
 
-  const getRoute = async () => {
-    if (!currentLocation) return;
+        console.log('Fetching new route...');
+        const response = await axios.get(
+          `https://api.openrouteservice.org/v2/directions/${transportModes[transportMode]}`,
+          {
+            params: {
+              api_key: OPENROUTE_API_KEY,
+              start: `${currentLocation.longitude},${currentLocation.latitude}`,
+              end: `${destination.longitude},${destination.latitude}`
+            },
+            cancelToken: getRouteRef.current.token
+          }
+        );
 
-    try {
-      const OPENROUTE_API_KEY = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY;
+        if (
+          !response.data ||
+          !response.data.features ||
+          !response.data.features[0]
+        ) {
+          throw new Error('Unexpected API response structure');
+        }
 
-      if (!OPENROUTE_API_KEY) {
-        throw new Error('Missing OpenRoute API key');
-      }
-      const response = await axios.get(
-        `https://api.openrouteservice.org/v2/directions/${transportModes[transportMode]}?api_key=${OPENROUTE_API_KEY}&start=${currentLocation.longitude},${currentLocation.latitude}&end=${destination.longitude},${destination.latitude}`
-      );
+        const feature = response.data.features[0];
 
-      if (
-        !response.data ||
-        !response.data.features ||
-        !response.data.features[0]
-      ) {
-        throw new Error('Unexpected API response structure');
-      }
+        if (!feature.geometry || !Array.isArray(feature.geometry.coordinates)) {
+          throw new Error('Invalid or missing route coordinates');
+        }
 
-      const feature = response.data.features[0];
+        const points = feature.geometry.coordinates.map((coord) => ({
+          latitude: coord[1],
+          longitude: coord[0]
+        }));
 
-      if (!feature.geometry || !Array.isArray(feature.geometry.coordinates)) {
-        throw new Error('Invalid or missing route coordinates');
-      }
+        setRoute(points);
 
-      const points = feature.geometry.coordinates.map((coord) => ({
-        latitude: coord[1],
-        longitude: coord[0]
-      }));
-
-      setRoute(points);
-
-      if (
-        feature.properties &&
-        feature.properties.segments &&
-        Array.isArray(feature.properties.segments)
-      ) {
-        const segment = feature.properties.segments[0];
-        const steps = segment.steps;
-        if (Array.isArray(steps)) {
-          setInstructions(
-            steps.map((step) => ({
-              instruction: step.instruction || 'No instruction available',
-              distance: step.distance || 0,
-              duration: step.duration || 0,
-              type: step.type,
-              name: step.name,
-              way_points: step.way_points
-            }))
-          );
-          setTotalDistance(segment.distance);
-          setTotalDuration(segment.duration);
+        if (
+          feature.properties &&
+          feature.properties.segments &&
+          Array.isArray(feature.properties.segments)
+        ) {
+          const segment = feature.properties.segments[0];
+          const steps = segment.steps;
+          if (Array.isArray(steps)) {
+            setInstructions(
+              steps.map((step) => ({
+                instruction: step.instruction || 'No instruction available',
+                distance: step.distance || 0,
+                duration: step.duration || 0,
+                type: step.type,
+                name: step.name,
+                way_points: step.way_points
+              }))
+            );
+            setTotalDistance(segment.distance);
+            setTotalDuration(segment.duration);
+          } else {
+            console.warn('No valid steps found in the route');
+            setInstructions([]);
+          }
         } else {
-          console.warn('No valid steps found in the route');
+          console.warn('No valid segments found in the route');
           setInstructions([]);
         }
-      } else {
-        console.warn('No valid segments found in the route');
-        setInstructions([]);
+        previousRequestRef.current = {
+          currentLocation,
+          transportMode,
+          destination
+        };
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log('Request canceled:', error.message);
+        } else {
+          console.error('Error fetching route:', error);
+          setRoute(null);
+          setInstructions([]);
+        }
       }
-    } catch (error) {
-      console.error('Error fetching route:', error);
-      setRoute(null);
-      setInstructions([]);
-    }
-  };
+    },
+    [transportMode, destination]
+  );
 
   const updateCurrentInstruction = (location) => {
     if (instructions.length === 0) return;
@@ -199,31 +278,6 @@ const OpenStreetMapNavigation = ({
         }
       }
     }
-  };
-
-  const calculateDistance = (point1, point2) => {
-    const earthRadiusMeters = 6371e3;
-    const latitude1Radians = (point1.latitude * Math.PI) / 180;
-    const latitude2Radians = (point2.latitude * Math.PI) / 180;
-    const latitudeDifferenceRadians =
-      ((point2.latitude - point1.latitude) * Math.PI) / 180;
-    const longitudeDifferenceRadians =
-      ((point2.longitude - point1.longitude) * Math.PI) / 180;
-
-    const a =
-      Math.sin(latitudeDifferenceRadians / 2) *
-        Math.sin(latitudeDifferenceRadians / 2) +
-      Math.cos(latitude1Radians) *
-        Math.cos(latitude2Radians) *
-        Math.sin(longitudeDifferenceRadians / 2) *
-        Math.sin(longitudeDifferenceRadians / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    const distanceInMeters = earthRadiusMeters * c;
-    const metersToMilesConversionFactor = 0.000621371;
-    const distanceInMiles = distanceInMeters * metersToMilesConversionFactor;
-
-    return distanceInMiles;
   };
 
   const speakInstruction = async (instruction) => {

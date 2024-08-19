@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import WeatherDashboard from '@/components/WeatherDashboard';
 import Events from '@/components/Events';
 import CustomButton from '@/components/CustomButton';
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { useSelector } from 'react-redux';
 
 const ParkDetailsScreen = () => {
   const route = useRoute();
@@ -18,9 +20,12 @@ const ParkDetailsScreen = () => {
     setColor(parkDetails.AQIData.color);
   }, [parkDetails.AQIData.color]);
 
+  const bottomSheetRef = useRef(null);
+  const snapPoints = useMemo(() => ['13%'], []);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Park Info Card: Displays main information about the park */}
         <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
           <Card.Cover
@@ -137,16 +142,28 @@ const ParkDetailsScreen = () => {
         </Card>
 
         {/* Get Direction Button: Allows users to navigate to a map view */}
-
-        <CustomButton
-          mode="contained"
-          onPress={() => router.push('/Map')}
-          labelStyle={styles.buttonLabel}
-          style={styles.button}
-        >
-          Get Directions
-        </CustomButton>
       </ScrollView>
+
+      {/* Bottom Sheet: displays the Map when the user clicks the Get Directions button */}
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={0}
+        snapPoints={snapPoints}
+        handleIndicatorStyle={styles.bottomSheetIndicator}
+        handleStyle={styles.bottomSheetHandle}
+        enablePanDownToClose={false}
+      >
+        <View style={styles.bottomSheetContent}>
+          <CustomButton
+            mode="contained"
+            onPress={() => router.push('/Map')}
+            labelStyle={styles.bottomSheetbuttonLabel}
+            style={styles.bottomSheetbutton}
+          >
+            Get Directions
+          </CustomButton>
+        </View>
+      </BottomSheet>
     </SafeAreaView>
   );
 };
@@ -158,6 +175,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F7F8',
     marginTop: 55
+  },
+  scrollContent: {
+    paddingBottom: 100 // Add some padding at the bottom to prevent content from being hidden behind the bottom sheet
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -315,5 +335,30 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     color: '#0B1E4B',
     marginVertical: 8
+  },
+  bottomSheetContent: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 2,
+    backgroundColor: '#f1f1f1'
+  },
+  bottomSheetbutton: {
+    width: '100%',
+    marginTop: 2
+  },
+  bottomSheetbuttonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    padding: 1
+  },
+  bottomSheetHandle: {
+    backgroundColor: '#8BC954',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15
+  },
+  bottomSheetIndicator: {
+    backgroundColor: '#E0E0E0',
+    width: 40,
+    height: 4
   }
 });
