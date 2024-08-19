@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
 import OnboardingScreen from './OnboardingScreen';
+import SignInScreen from './SignInScreen';
 
 //main landing or entry file
 export default function index() {
@@ -25,7 +26,7 @@ export default function index() {
       <View style={styles.container}>
         <CustomButton
           mode="outlined"
-          onPress={() => navigation.navigate(OnboardingScreen)}
+          onPress={() => navigation.navigate(SignInScreen)}
           style={styles.button}
           color="white"
         >

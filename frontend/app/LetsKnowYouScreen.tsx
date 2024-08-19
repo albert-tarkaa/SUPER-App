@@ -7,7 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 const LetsKnowYouScreen = () => {
   const route = useRoute();
-  const { email, password } = route.params;
+ // const { email, password } = route.params;
   const navigation = useNavigation();
 
   const [date, setDate] = useState(new Date());
@@ -15,7 +15,7 @@ const LetsKnowYouScreen = () => {
   const [Surname, setSurname] = useState('');
   const [Gender, setGender] = useState('');
 
-  console.log(email + ' ' + password);
+ // console.log(email + ' ' + password);
 
   return (
     <SafeAreaView style={styles.container}>

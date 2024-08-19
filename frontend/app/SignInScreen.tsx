@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
+import { login } from '@/components/ReduxStore/Slices/authSlice';
+import { getUserLocation } from '@/components/ReduxStore/Slices/locationSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,6 +16,19 @@ const IMAGE_HEIGHT_PERCENTAGE = (135.05 / height) * 100;
 
 const SignInScreen = () => {
   const navigation = useNavigation();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
+  const dispatch = useDispatch();
+  const { isLoading, error } = useSelector((state) => state.auth);
+
+  // Process the username: trim whitespace and convert to lowercase
+  const processedUsername = username.trim().toLowerCase();
+
+  const handleLogin = async () => {
+    await dispatch(login({ username: processedUsername, password }));
+  };
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -34,21 +50,29 @@ const SignInScreen = () => {
           textColor="#000"
           selectionColor="#000"
           placeholder="Email Address"
+          value={username}
+          onChangeText={setUsername}
         />
         <TextInput
-          // label="Password"
+          secureTextEntry={!passwordVisible}
           mode="outlined"
-          secureTextEntry
           style={styles.input}
           outlineStyle={{
             borderColor: '#E2E1EC',
             borderWidth: 1,
             borderRadius: 12
           }}
-          right={<TextInput.Icon icon="eye" />}
+          right={
+            <TextInput.Icon
+              icon={passwordVisible ? 'eye-off' : 'eye'}
+              onPress={() => setPasswordVisible(!passwordVisible)}
+            />
+          }
           textColor="#000"
           selectionColor="#000"
           placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
         />
 
         <Link to="/ForgotPasswordScreen" style={styles.signInText}>
@@ -57,7 +81,7 @@ const SignInScreen = () => {
 
         <CustomButton
           mode="contained"
-          onPress={() => navigation.navigate('LetsKnowYouScreen')}
+          onPress={() => handleLogin()}
           rippleColor="#f1f1f1"
           labelStyle={styles.buttonLabel}
         >

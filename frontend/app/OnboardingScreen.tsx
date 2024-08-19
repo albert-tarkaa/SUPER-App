@@ -68,9 +68,11 @@ const OnboardingScreen = () => {
 
           <CustomButton
             mode="contained"
-            onPress={() =>
-              navigation.navigate('LetsKnowYouScreen', { email, password })
-            }
+            onPress={() => {
+              //trim whitespace and convert to lowercase
+              const processedEmail = email.trim().toLowerCase();
+              navigation.navigate('LetsKnowYouScreen', { email: processedEmail, password })
+            }}
           >
             Create Account
           </CustomButton>
