@@ -28,7 +28,7 @@ public class UserModel implements UserDetails {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 45,name = "email")
+    @Column(nullable = false, unique = true, length = 45)
     private String username;
 
     @Column(nullable = false)
@@ -46,7 +46,8 @@ public class UserModel implements UserDetails {
     @Column(nullable = true, length = 15)
     private String gender;
 
-    private boolean isProfileComplete;
+
+    private boolean isProfileComplete = false;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
