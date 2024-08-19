@@ -46,6 +46,8 @@ public class UserModel implements UserDetails {
     @Column(nullable = true, length = 15)
     private String gender;
 
+    private boolean isProfileComplete;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;

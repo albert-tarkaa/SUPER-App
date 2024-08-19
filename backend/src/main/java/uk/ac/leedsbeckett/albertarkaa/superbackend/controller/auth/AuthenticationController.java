@@ -59,9 +59,9 @@ public class AuthenticationController {
 
     // Handle POST requests to /api/v1/auth/refresh
     @PostMapping("/refresh")
-    public ResponseEntity<ControllerResponse<AuthenticationResponse>> refresh(@RequestBody @Valid RefreshTokenRequest refreshTokenRequest) {
+    public ResponseEntity<ControllerResponse<AuthenticationResponse>> refresh(@RequestBody RefreshTokenRequest refreshTokenRequest) {
         // Call the AuthenticationService to refresh an authentication token
-        ControllerResponse<AuthenticationResponse> response = authenticationService.refresh(String.valueOf(refreshTokenRequest));
+        ControllerResponse<AuthenticationResponse> response = authenticationService.refresh(refreshTokenRequest);
 
         // Check if the token refresh response is successful
         if (response.isSuccess()) {
@@ -93,7 +93,7 @@ public class AuthenticationController {
 
     // Handle GET requests to /api/v1/auth/user
     @GetMapping("/user")
-    public ResponseEntity<ControllerResponse<Object>> getUser(@RequestBody String token) {
+    public ResponseEntity<ControllerResponse<Object>> getUser(@RequestHeader("Authorization") String token) {
         // Call the AuthenticationService to get user details using a token
         ControllerResponse<Object> response = authenticationService.getUser(token);
 

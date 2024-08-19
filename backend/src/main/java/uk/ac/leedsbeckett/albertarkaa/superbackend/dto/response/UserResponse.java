@@ -20,5 +20,6 @@ public class UserResponse {
     private LocalDate dob;
     private String gender;
     private String role;
+    private boolean isProfileComplete;
     private UUID userId;
 }

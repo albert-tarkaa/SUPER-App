@@ -22,4 +22,5 @@ public class AuthenticationResponse {
     private String gender;
     private String role;
     private UUID userId;
+    private boolean isProfileComplete;
 }
