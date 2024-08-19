@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
 import { login } from '@/components/ReduxStore/Slices/authSlice';
-import { getUserLocation } from '@/components/ReduxStore/Slices/locationSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
 const { width, height } = Dimensions.get('window');
 
-// Convert pixel values to percentages
 const IMAGE_WIDTH_PERCENTAGE = (80.29 / width) * 100;
 const IMAGE_HEIGHT_PERCENTAGE = (135.05 / height) * 100;
 
@@ -21,14 +19,21 @@ const SignInScreen = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   const dispatch = useDispatch();
-  const { isLoading, error } = useSelector((state) => state.auth);
-
-  // Process the username: trim whitespace and convert to lowercase
-  const processedUsername = username.trim().toLowerCase();
+  const { isLoading, error, isAuthenticated, user } = useSelector((state) => state.auth);
+  const aaaa = useSelector((state) => state.auth);
+  console.log({aaaa});
 
   const handleLogin = async () => {
+    const processedUsername = username.trim().toLowerCase();
     await dispatch(login({ username: processedUsername, password }));
   };
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigation.navigate('(tabs)');
+    }
+  }, [isAuthenticated, user, navigation]);
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -39,14 +44,9 @@ const SignInScreen = () => {
         <Text style={styles.title}>Sign In</Text>
 
         <TextInput
-          // label="Email Address"
           mode="outlined"
           style={styles.input}
-          outlineStyle={{
-            borderColor: '#E2E1EC',
-            borderWidth: 1,
-            borderRadius: 12
-          }}
+          outlineStyle={styles.inputOutline}
           textColor="#000"
           selectionColor="#000"
           placeholder="Email Address"
@@ -57,11 +57,7 @@ const SignInScreen = () => {
           secureTextEntry={!passwordVisible}
           mode="outlined"
           style={styles.input}
-          outlineStyle={{
-            borderColor: '#E2E1EC',
-            borderWidth: 1,
-            borderRadius: 12
-          }}
+          outlineStyle={styles.inputOutline}
           right={
             <TextInput.Icon
               icon={passwordVisible ? 'eye-off' : 'eye'}
@@ -75,13 +71,19 @@ const SignInScreen = () => {
           onChangeText={setPassword}
         />
 
-        <Link to="/ForgotPasswordScreen" style={styles.signInText}>
+        {error && (
+          <HelperText type="error" visible>
+            * {error.errorMessage}
+          </HelperText>
+        )}
+
+        <Link to="/ForgotPasswordScreen" style={styles.forgotPasswordLink}>
           Forgot Password?
         </Link>
 
         <CustomButton
           mode="contained"
-          onPress={() => handleLogin()}
+          onPress={handleLogin}
           rippleColor="#f1f1f1"
           labelStyle={styles.buttonLabel}
         >
@@ -98,9 +100,9 @@ const SignInScreen = () => {
           Continue with Google
         </CustomButton>
 
-        <View style={styles.signInContainer}>
-          <Text style={styles.signInTextNormal}>Don't have an account? </Text>
-          <Link to="/OnboardingScreen" style={styles.signInText}>
+        <View style={styles.signUpContainer}>
+          <Text style={styles.signUpTextNormal}>Don't have an account? </Text>
+          <Link to="/OnboardingScreen" style={styles.signUpLink}>
             Sign Up
           </Link>
         </View>
@@ -120,16 +122,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   logo: {
-    width: `${IMAGE_WIDTH_PERCENTAGE}%`, // Dynamic percentage width
-    height: `${IMAGE_HEIGHT_PERCENTAGE}%`, // Dynamic percentage height
+    width: `${IMAGE_WIDTH_PERCENTAGE}%`,
+    height: `${IMAGE_HEIGHT_PERCENTAGE}%`,
     resizeMode: 'contain',
     alignSelf: 'center',
     marginBottom: 80
-    // marginTop: 10,
   },
   title: {
     fontSize: 32,
-    fontWeight: 600,
+    fontWeight: '600',
     textAlign: 'left',
     marginBottom: 20,
     width: '50%',
@@ -141,11 +142,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     backgroundColor: 'white'
   },
-  createAccountButton: {
-    marginTop: 25,
-    paddingVertical: 10,
-    backgroundColor: 'green',
-    borderRadius: 40
+  inputOutline: {
+    borderColor: '#E2E1EC',
+    borderWidth: 1,
+    borderRadius: 12
   },
   buttonLabel: {
     fontSize: 16,
@@ -156,28 +156,23 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     color: 'gray'
   },
-  googleButton: {
-    marginTop: 4,
-    paddingVertical: 8,
-    borderColor: 'lightgray',
-    borderRadius: 40
-  },
-  googleButtonLabel: {
-    fontSize: 16,
-    color: 'black'
-  },
-  signInContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 30
-  },
-  signInText: {
+  forgotPasswordLink: {
     color: 'green',
     fontWeight: 'bold',
     fontSize: 16,
     marginBottom: 10
   },
-  signInTextNormal: {
+  signUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30
+  },
+  signUpLink: {
+    color: 'green',
+    fontWeight: 'bold',
+    fontSize: 16
+  },
+  signUpTextNormal: {
     color: 'black',
     fontSize: 16
   }

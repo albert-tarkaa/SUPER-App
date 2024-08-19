@@ -12,19 +12,43 @@ export const login = createAsyncThunk(
         username,
         password
       });
-      await Keychain.setGenericPassword(
-        'accessToken',
-        response.data.accessToken
-      );
-      await Keychain.setInternetCredentials(
-        'refreshToken',
-        'refreshToken',
-        response.data.refreshToken
-      );
-      return response.data;
-    } catch (error: any) {
-      console.log(error.response.data);
-      return rejectWithValue(error.response.data);
+
+      // Extract authToken and refreshToken
+      const { authToken, refreshToken, data } = response.data;
+      // Destructure user data
+      const {
+        firstName,
+        lastName,
+        dob,
+        gender,
+        role,
+        userId,
+        profileComplete
+      } = data;
+
+      try {
+        await Keychain.setGenericPassword(authToken, refreshToken);
+      } catch (keychainError) {
+        console.error('Failed to save to Keychain:', keychainError);
+      }
+
+      // Return user data including tokens
+      return {
+        user: {
+          username,
+          firstName,
+          lastName,
+          dob,
+          gender,
+          role,
+          userId,
+          profileComplete
+        },
+        authToken,
+        refreshToken
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error);
     }
   }
 );
@@ -33,10 +57,14 @@ export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
   async (_, { rejectWithValue }) => {
     try {
-      const refreshToken =
-        await Keychain.getInternetCredentials('refreshToken');
+      const credentials = await Keychain.getInternetCredentials(
+        'refreshTokenService'
+      );
+      if (!credentials) {
+        throw new Error('No refresh token found');
+      }
       const response = await axios.post(`${API_URL}/refresh-token`, {
-        refreshToken: refreshToken.password
+        refreshToken: credentials.password
       });
       await Keychain.setGenericPassword(
         'accessToken',
@@ -44,7 +72,9 @@ export const refreshToken = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(
+        error.response?.data || { message: 'An error occurred' }
+      );
     }
   }
 );
@@ -61,8 +91,9 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      // Clear Keychain credentials
       Keychain.resetGenericPassword();
-      Keychain.resetInternetCredentials('refreshToken');
+      Keychain.resetInternetCredentials('refreshTokenService');
     }
   },
   extraReducers: (builder) => {
