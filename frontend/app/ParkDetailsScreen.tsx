@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import WeatherDashboard from '@/components/WeatherDashboard';
 import Events from '@/components/Events';
+import CustomButton from '@/components/CustomButton';
 
 const ParkDetailsScreen = () => {
   const route = useRoute();
@@ -136,14 +137,15 @@ const ParkDetailsScreen = () => {
         </Card>
 
         {/* Get Direction Button: Allows users to navigate to a map view */}
-        <Button
+
+        <CustomButton
           mode="contained"
-          style={styles.button}
-          labelStyle={styles.buttonLabel}
           onPress={() => router.push('/Map')}
+          labelStyle={styles.buttonLabel}
+          style={styles.button}
         >
-          Get Direction
-        </Button>
+          Get Directions
+        </CustomButton>
       </ScrollView>
     </SafeAreaView>
   );
@@ -261,7 +263,6 @@ const styles = StyleSheet.create({
   },
   button: {
     margin: 15,
-    paddingVertical: 8,
     backgroundColor: 'green',
     borderRadius: 40,
     width: '95%',
