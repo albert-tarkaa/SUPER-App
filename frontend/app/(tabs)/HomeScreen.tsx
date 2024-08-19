@@ -8,6 +8,11 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import * as Location from 'expo-location';
 import LottieView from 'lottie-react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  getUserLocation,
+  updateUserLocation
+} from '@/components/ReduxStore/Slices/locationSlice';
 
 const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -35,23 +40,24 @@ const HomeScreen = () => {
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  const onChangeSearch = (query) => setSearchQuery(query);
+  const dispatch = useDispatch();
+  const { latitude, longitude, isLoading, error } = useSelector(
+    (state) => state.location
+  );
 
   useEffect(() => {
-    let watchId = null; // To keep track of the watchPositionAsync subscription
+    let watchId = null;
 
-    const fetchLocation = async () => {
+    const setupLocation = async () => {
       try {
-        // Request foreground permissions
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           setErrorMsg('Permission to access location was denied');
           return;
         }
 
-        // Get the current position
-        let location = await Location.getCurrentPositionAsync({});
-        setCurrentLocation(location.coords);
+        // Get initial location
+        dispatch(getUserLocation());
 
         // Watch for location updates
         watchId = await Location.watchPositionAsync(
@@ -60,7 +66,7 @@ const HomeScreen = () => {
             distanceInterval: 10 // Distance in meters
           },
           (location) => {
-            setCurrentLocation(location.coords);
+            dispatch(updateUserLocation(location.coords));
           }
         );
       } catch (error) {
@@ -69,15 +75,15 @@ const HomeScreen = () => {
       }
     };
 
-    fetchLocation();
+    setupLocation();
 
-    // Cleanup function to stop watching location when the component unmounts
+    // Cleanup function
     return () => {
       if (watchId) {
         watchId.remove();
       }
     };
-  }, []);
+  }, [dispatch]);
 
   const {
     data: parkData,
@@ -103,6 +109,11 @@ const HomeScreen = () => {
 
   const handleParkPress = (data) => {
     navigation.navigate('ParkDetailsScreen', { parkDetails: data.parkDetails });
+  };
+
+  const onChangeSearch = (query) => {
+    setSearchQuery(query);
+    // Handle the search logic here
   };
 
   if (isParkLoading || isWeatherLoading)
