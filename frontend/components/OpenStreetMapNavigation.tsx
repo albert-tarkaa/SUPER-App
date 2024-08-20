@@ -17,6 +17,9 @@ import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserLocation } from '@/components/ReduxStore/Slices/locationSlice';
 import { debounce, isEqual } from 'lodash';
+import { Button, Modal, Portal, Provider } from 'react-native-paper';
+import LottieView from 'lottie-react-native';
+import { router } from 'expo-router';
 
 type Location = {
   latitude: number;
@@ -47,24 +50,17 @@ const transportStyles = {
   }
 };
 
-const defaultParkDestination: Location = {
-  latitude: 53.798889, // Default latitude
-  longitude: -1.551944 // Default longitude
-};
+const OpenStreetMapNavigation = () => {
+  const { latitude, longitude, destinationLatitude, destinationLongitude } =
+    useSelector((state) => state.location);
+  const dispatch = useDispatch();
 
-const OpenStreetMapNavigation = ({
-  parkDestination
-}: {
-  parkDestination?: Location;
-}) => {
-  const [destination, setDestination] = useState<Location>(
-    parkDestination || defaultParkDestination
+  const defaultLocation = { latitude: 53.7995746, longitude: -1.5471022 };
+  const destination = useMemo(
+    () => ({ latitude: destinationLatitude, longitude: destinationLongitude }),
+    [destinationLatitude, destinationLongitude]
   );
 
-  // Initialize currentLocation with a default value or null
-  const { latitude, longitude } = useSelector((state) => state.location);
-
-  //currentLocation only changes when latitude or longitude actually changes, not on every render.
   const currentLocation = useMemo(
     () => (latitude && longitude ? { latitude, longitude } : null),
     [latitude, longitude]
@@ -79,13 +75,13 @@ const OpenStreetMapNavigation = ({
   const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isModalVisible, setModalVisible] = useState(false);
 
   const mapRef = useRef(null);
-  const dispatch = useDispatch();
   const soundObject = useRef(new Audio.Sound());
   const bottomSheetRef = useRef(null);
   const getRouteRef = useRef(null);
-  const getRouteTimeoutRef = useRef(null);
+  const locationSubscriptionRef = useRef(null);
 
   const snapPoints = useMemo(() => ['20%', '50%', '75%'], []);
   const previousRequestRef = useRef({
@@ -93,7 +89,18 @@ const OpenStreetMapNavigation = ({
     transportMode: null,
     destination: null
   });
-  const locationSubscriptionRef = useRef(null);
+
+  useEffect(() => {
+    if (latitude == null || longitude == null) {
+      setModalVisible(true);
+    }
+  }, [latitude, longitude]);
+
+  const hideModal = () => {
+    router.push('(tabs)');
+
+    setModalVisible(false);
+  };
 
   const debouncedGetRoute = useCallback(
     debounce((location) => {
@@ -124,8 +131,8 @@ const OpenStreetMapNavigation = ({
         locationSubscriptionRef.current = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.Balanced,
-            distanceInterval: 20, // Increased to reduce frequency
-            timeInterval: 10000 // 10 seconds
+            distanceInterval: 20,
+            timeInterval: 10000
           },
           (newLocation) => {
             if (isMounted) {
@@ -157,7 +164,6 @@ const OpenStreetMapNavigation = ({
     async (currentLocation) => {
       if (!currentLocation) return;
 
-      // Check if the request parameters have changed
       if (
         isEqual(previousRequestRef.current.currentLocation, currentLocation) &&
         previousRequestRef.current.transportMode === transportMode &&
@@ -174,12 +180,12 @@ const OpenStreetMapNavigation = ({
           throw new Error('Missing OpenRoute API key');
         }
 
-        // Cancel any ongoing requests
         if (getRouteRef.current) {
           getRouteRef.current.cancel('New request initiated');
         }
 
-        // Create a new cancelable request
+        console.log({ currentLocation });
+
         getRouteRef.current = axios.CancelToken.source();
 
         console.log('Fetching new route...');
@@ -189,11 +195,13 @@ const OpenStreetMapNavigation = ({
             params: {
               api_key: OPENROUTE_API_KEY,
               start: `${currentLocation.longitude},${currentLocation.latitude}`,
-              end: `${destination.longitude},${destination.latitude}`
+              end: `${destinationLatitude.longitude},${destinationLongitude.latitude}`
             },
             cancelToken: getRouteRef.current.token
           }
         );
+
+        
 
         if (
           !response.data ||
@@ -306,41 +314,47 @@ const OpenStreetMapNavigation = ({
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
-  const TransportModeSelector = () => (
-    <View style={styles.selectorContainer}>
-      {Object.keys(transportModes).map((mode) => (
-        <TouchableOpacity
-          key={mode}
-          style={[
-            styles.modeButton,
-            transportMode === mode && styles.selectedModeButton
-          ]}
-          onPress={() => setTransportMode(mode)}
-        >
-          <Text
+  const TransportModeSelector = useCallback(
+    () => (
+      <View style={styles.selectorContainer}>
+        {Object.keys(transportModes).map((mode) => (
+          <TouchableOpacity
+            key={mode}
             style={[
-              styles.modeButtonText,
-              transportMode === mode && styles.selectedModeButtonText
+              styles.modeButton,
+              transportMode === mode && styles.selectedModeButton
             ]}
+            onPress={() => setTransportMode(mode)}
           >
-            {mode.charAt(0).toUpperCase() + mode.slice(1)}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+            <Text
+              style={[
+                styles.modeButtonText,
+                transportMode === mode && styles.selectedModeButtonText
+              ]}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    ),
+    [transportMode]
   );
 
-  const AudioToggle = () => (
-    <TouchableOpacity
-      style={styles.audioButton}
-      onPress={() => setIsAudioEnabled(!isAudioEnabled)}
-    >
-      <MaterialIcons
-        name={isAudioEnabled ? 'volume-up' : 'volume-off'}
-        size={24}
-        color={isAudioEnabled ? '#007AFF' : '#000'}
-      />
-    </TouchableOpacity>
+  const AudioToggle = useCallback(
+    () => (
+      <TouchableOpacity
+        style={styles.audioButton}
+        onPress={() => setIsAudioEnabled((prev) => !prev)}
+      >
+        <MaterialIcons
+          name={isAudioEnabled ? 'volume-up' : 'volume-off'}
+          size={24}
+          color={isAudioEnabled ? '#007AFF' : '#000'}
+        />
+      </TouchableOpacity>
+    ),
+    [isAudioEnabled]
   );
 
   const renderBottomSheetContent = useCallback(() => {
@@ -363,14 +377,7 @@ const OpenStreetMapNavigation = ({
           )}
         </View>
         <View style={styles.bottomSheetInstructions}>
-          <View
-            style={{
-              height: 5,
-              backgroundColor: '#f0f0f0',
-              alignSelf: 'stretch',
-              marginBottom: 10
-            }}
-          />
+          <View style={styles.bottomSheetDivider} />
           <BottomSheetScrollView
             style={styles.bottomSheetInstructions}
             contentContainerStyle={styles.instructionsContainer}
@@ -408,66 +415,90 @@ const OpenStreetMapNavigation = ({
     instructions,
     currentInstructionIndex,
     isNavigating,
-    transportMode,
-    isAudioEnabled
+    TransportModeSelector
   ]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.mapContainer}>
-        {currentLocation && (
-          <MapView
-            ref={mapRef}
-            style={styles.map}
-            provider={PROVIDER_DEFAULT}
-            initialRegion={{
-              latitude: currentLocation.latitude,
-              longitude: currentLocation.longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421
-            }}
-            showsUserLocation={true}
-          >
-            <Marker
-              coordinate={currentLocation}
-              pinColor="blue"
-              title="Your Location"
-            />
-            <Marker
-              coordinate={destination}
-              pinColor="red"
-              title="Destination"
-            />
-            {route && (
-              <Polyline
-                coordinates={route}
-                strokeColor={transportStyles[transportMode].strokeColor}
-                strokeWidth={transportStyles[transportMode].strokeWidth}
+    <Provider>
+      <View style={styles.container}>
+        <View style={styles.mapContainer}>
+          {currentLocation && (
+            <MapView
+              ref={mapRef}
+              style={styles.map}
+              provider={PROVIDER_DEFAULT}
+              initialRegion={{
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421
+              }}
+              showsUserLocation={true}
+            >
+              <Marker
+                coordinate={currentLocation}
+                pinColor="blue"
+                title="Your Location"
               />
-            )}
-          </MapView>
-        )}
-        <View style={styles.infoContainer}>
-          <Text style={styles.infoText}>
-            Distance: {(totalDistance / 1000).toFixed(2)} km
-          </Text>
-          <Text style={styles.infoText}>
-            Duration: {(totalDuration / 60).toFixed(0)} min
-          </Text>
+              <Marker
+                coordinate={destination}
+                pinColor="red"
+                title="Destination"
+              />
+              {route && (
+                <Polyline
+                  coordinates={route}
+                  strokeColor={transportStyles[transportMode].strokeColor}
+                  strokeWidth={transportStyles[transportMode].strokeWidth}
+                />
+              )}
+            </MapView>
+          )}
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>
+              Distance: {(totalDistance / 1000).toFixed(2)} km
+            </Text>
+            <Text style={styles.infoText}>
+              Duration: {(totalDuration / 60).toFixed(0)} min
+            </Text>
+          </View>
+          <AudioToggle />
         </View>
-
-        <AudioToggle />
+        <BottomSheet
+          ref={bottomSheetRef}
+          index={0}
+          snapPoints={snapPoints}
+          backgroundStyle={styles.bottomSheetBackground}
+          handleIndicatorStyle={styles.bottomSheetHandle}
+        >
+          {renderBottomSheetContent()}
+        </BottomSheet>
       </View>
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={0}
-        snapPoints={snapPoints}
-        backgroundStyle={styles.bottomSheetBackground}
-        handleIndicatorStyle={styles.bottomSheetHandle}
-      >
-        {renderBottomSheetContent()}
-      </BottomSheet>
-    </View>
+      <Portal>
+        <Modal
+          visible={isModalVisible}
+          onDismiss={hideModal}
+          contentContainerStyle={styles.Modalcontainer}
+        >
+          <LottieView
+            source={require('@/assets/images/Location.json')}
+            autoPlay
+            loop
+            style={{ width: 300, height: 300 }}
+          />
+          <Text style={styles.modalText}>
+            Location access is required to proceed.
+          </Text>
+          <Button
+            mode="contained"
+            onPress={hideModal}
+            style={styles.Modalbutton}
+          >
+            <Text style={styles.ModalButtonText}>Go back</Text>
+          </Button>
+        </Modal>
+      </Portal>
+    </Provider>
   );
 };
 
@@ -475,6 +506,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff'
+  },
+  Modalcontainer: {
+    flex: 1,
+    backgroundColor: '#F7F7F8',
+    alignItems: 'center',
+    maxHeight: '100%',
+    alignContent: 'center',
+    marginVertical: 0
+  },
+  ModalButtonText: {
+    fontSize: 22,
+    fontWeight: '600',
+    lineHeight: 26.63,
+    letterSpacing: 0.25,
+    marginTop: 1,
+    color: '#fff'
+  },
+  Modalbutton: {
+    margin: 25,
+    backgroundColor: 'green',
+    borderRadius: 40,
+    width: '65%',
+    alignSelf: 'center',
+    marginBottom: 50,
+    padding: 2
   },
   mapContainer: {
     height: Dimensions.get('window').height * 0.9
@@ -604,7 +660,18 @@ const styles = StyleSheet.create({
     width: 60,
     alignSelf: 'center',
     marginVertical: 10
+  },
+  bottomSheetDivider: {
+    height: 5,
+    backgroundColor: '#f0f0f0',
+    alignSelf: 'stretch',
+    marginBottom: 10
+  },
+  modalText: {
+    marginBottom: 20,
+    fontSize: 18,
+    padding: 5
   }
 });
 
-export default OpenStreetMapNavigation;
+export default React.memo(OpenStreetMapNavigation);

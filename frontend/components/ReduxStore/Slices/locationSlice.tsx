@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as Location from 'expo-location';
+import { update } from 'lodash';
 
 export const getUserLocation = createAsyncThunk(
   'location/getUserLocation',
@@ -23,6 +24,8 @@ const locationSlice = createSlice({
   initialState: {
     latitude: null,
     longitude: null,
+    destinationLatitude: null,
+    destinationLongitude: null,
     isLoading: false,
     error: null
   },
@@ -30,6 +33,10 @@ const locationSlice = createSlice({
     updateUserLocation: (state, action) => {
       state.latitude = action.payload.latitude;
       state.longitude = action.payload.longitude;
+    },
+    updateDestinationLocation: (state, action) => {
+      state.destinationLatitude = action.payload.destinationLatitude;
+      state.destinationLongitude = action.payload.destinationLongitude;
     }
   },
   extraReducers: (builder) => {
@@ -50,5 +57,6 @@ const locationSlice = createSlice({
   }
 });
 
-export const { updateUserLocation } = locationSlice.actions;
+export const { updateUserLocation, updateDestinationLocation } =
+  locationSlice.actions;
 export default locationSlice.reducer;
