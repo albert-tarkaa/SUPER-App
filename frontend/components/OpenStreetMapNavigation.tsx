@@ -14,8 +14,13 @@ import { Audio } from 'expo-av';
 import { MaterialIcons } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateUserLocation } from '@/components/ReduxStore/Slices/locationSlice';
+import {
+  getDestinationLocation,
+  getUserLocationSelector,
+  updateUserLocation
+} from '@/components/ReduxStore/Slices/locationSlice';
 import { debounce, isEqual } from 'lodash';
 import { Button, Modal, Portal, Provider } from 'react-native-paper';
 import LottieView from 'lottie-react-native';
@@ -50,22 +55,19 @@ const transportStyles = {
   }
 };
 
+const defaultParkDestination: Location = {
+  latitude: 53.798889, // Default latitude
+  longitude: -1.551944 // Default longitude
+};
+
 const OpenStreetMapNavigation = () => {
-  const { latitude, longitude, destinationLatitude, destinationLongitude } =
-    useSelector((state) => state.location);
+  const userLocation = useSelector(getUserLocationSelector);
+  const destinationLocation = useSelector(getDestinationLocation);
+
   const dispatch = useDispatch();
 
-  const defaultLocation = { latitude: 53.7995746, longitude: -1.5471022 };
-  const destination = useMemo(
-    () => ({ latitude: destinationLatitude, longitude: destinationLongitude }),
-    [destinationLatitude, destinationLongitude]
-  );
-
-  const currentLocation = useMemo(
-    () => (latitude && longitude ? { latitude, longitude } : null),
-    [latitude, longitude]
-  );
-
+  // Initialize currentLocation with a default value or null
+  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [instructions, setInstructions] = useState([]);
   const [route, setRoute] = useState(null);
@@ -73,211 +75,113 @@ const OpenStreetMapNavigation = () => {
   const [totalDistance, setTotalDistance] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
 
   const mapRef = useRef(null);
   const soundObject = useRef(new Audio.Sound());
   const bottomSheetRef = useRef(null);
-  const getRouteRef = useRef(null);
-  const locationSubscriptionRef = useRef(null);
 
   const snapPoints = useMemo(() => ['20%', '50%', '75%'], []);
-  const previousRequestRef = useRef({
-    currentLocation: null,
-    transportMode: null,
-    destination: null
-  });
 
   useEffect(() => {
-    if (latitude == null || longitude == null) {
+    if (userLocation) {
+      getRoute();
+    }
+  }, [userLocation, transportMode]);
+
+  useEffect(() => {
+    if (!userLocation.latitude || !userLocation.longitude) {
       setModalVisible(true);
     }
-  }, [latitude, longitude]);
+  }, [userLocation]);
 
   const hideModal = () => {
     router.push('(tabs)');
-
     setModalVisible(false);
   };
 
-  const debouncedGetRoute = useCallback(
-    debounce((location) => {
-      if (location) {
-        getRoute(location);
+  const getRoute = async () => {
+    if (!userLocation) return;
+
+    try {
+      const OPENROUTE_API_KEY = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY;
+
+      if (!OPENROUTE_API_KEY) {
+        throw new Error('Missing OpenRoute API key');
       }
-    }, 1000),
-    [transportMode, destination]
-  );
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const setupLocationTracking = async () => {
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setErrorMsg('Permission to access location was denied');
-          return;
-        }
-
-        let location = await Location.getCurrentPositionAsync({});
-        if (isMounted) {
-          dispatch(updateUserLocation(location.coords));
-          debouncedGetRoute(location.coords);
-        }
-
-        locationSubscriptionRef.current = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.Balanced,
-            distanceInterval: 20,
-            timeInterval: 10000
-          },
-          (newLocation) => {
-            if (isMounted) {
-              dispatch(updateUserLocation(newLocation.coords));
-              debouncedGetRoute(newLocation.coords);
-              if (isNavigating) {
-                updateCurrentInstruction(newLocation.coords);
-              }
-            }
-          }
-        );
-      } catch (err) {
-        console.error('Error setting up location tracking:', err);
+      const response = await axios.get(
+        `https://api.openrouteservice.org/v2/directions/${transportModes[transportMode]}?api_key=${OPENROUTE_API_KEY}&start=${userLocation.longitude},${userLocation.latitude}&end=${destinationLocation.longitude},${destinationLocation.latitude}`
+      );
+      console.log(response.data.features);
+      if (
+        !response.data ||
+        !response.data.features ||
+        !response.data.features[0]
+      ) {
+        throw new Error('Unexpected API response structure');
       }
-    };
 
-    setupLocationTracking();
+      const feature = response.data.features[0];
 
-    return () => {
-      isMounted = false;
-      if (locationSubscriptionRef.current) {
-        locationSubscriptionRef.current.remove();
+      if (!feature.geometry || !Array.isArray(feature.geometry.coordinates)) {
+        throw new Error('Invalid or missing route coordinates');
       }
-      debouncedGetRoute.cancel();
-    };
-  }, [dispatch, isNavigating, debouncedGetRoute]);
 
-  const getRoute = useCallback(
-    async (currentLocation) => {
-      if (!currentLocation) return;
+      const points = feature.geometry.coordinates.map((coord) => ({
+        latitude: coord[1],
+        longitude: coord[0]
+      }));
+
+      setRoute(points);
 
       if (
-        isEqual(previousRequestRef.current.currentLocation, currentLocation) &&
-        previousRequestRef.current.transportMode === transportMode &&
-        isEqual(previousRequestRef.current.destination, destination)
+        feature.properties &&
+        feature.properties.segments &&
+        Array.isArray(feature.properties.segments)
       ) {
-        console.log('Skipping API call - no changes in parameters');
-        return;
-      }
-
-      try {
-        const OPENROUTE_API_KEY = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY;
-
-        if (!OPENROUTE_API_KEY) {
-          throw new Error('Missing OpenRoute API key');
-        }
-
-        if (getRouteRef.current) {
-          getRouteRef.current.cancel('New request initiated');
-        }
-
-        console.log({ currentLocation });
-
-        getRouteRef.current = axios.CancelToken.source();
-
-        console.log('Fetching new route...');
-        const response = await axios.get(
-          `https://api.openrouteservice.org/v2/directions/${transportModes[transportMode]}`,
-          {
-            params: {
-              api_key: OPENROUTE_API_KEY,
-              start: `${currentLocation.longitude},${currentLocation.latitude}`,
-              end: `${destinationLatitude.longitude},${destinationLongitude.latitude}`
-            },
-            cancelToken: getRouteRef.current.token
-          }
-        );
-
-        
-
-        if (
-          !response.data ||
-          !response.data.features ||
-          !response.data.features[0]
-        ) {
-          throw new Error('Unexpected API response structure');
-        }
-
-        const feature = response.data.features[0];
-
-        if (!feature.geometry || !Array.isArray(feature.geometry.coordinates)) {
-          throw new Error('Invalid or missing route coordinates');
-        }
-
-        const points = feature.geometry.coordinates.map((coord) => ({
-          latitude: coord[1],
-          longitude: coord[0]
-        }));
-
-        setRoute(points);
-
-        if (
-          feature.properties &&
-          feature.properties.segments &&
-          Array.isArray(feature.properties.segments)
-        ) {
-          const segment = feature.properties.segments[0];
-          const steps = segment.steps;
-          if (Array.isArray(steps)) {
-            setInstructions(
-              steps.map((step) => ({
-                instruction: step.instruction || 'No instruction available',
-                distance: step.distance || 0,
-                duration: step.duration || 0,
-                type: step.type,
-                name: step.name,
-                way_points: step.way_points
-              }))
-            );
-            setTotalDistance(segment.distance);
-            setTotalDuration(segment.duration);
-          } else {
-            console.warn('No valid steps found in the route');
-            setInstructions([]);
-          }
+        const segment = feature.properties.segments[0];
+        const steps = segment.steps;
+        if (Array.isArray(steps)) {
+          setInstructions(
+            steps.map((step) => ({
+              instruction: step.instruction || 'No instruction available',
+              distance: step.distance || 0,
+              duration: step.duration || 0,
+              type: step.type,
+              name: step.name,
+              way_points: step.way_points
+            }))
+          );
+          setTotalDistance(segment.distance);
+          setTotalDuration(segment.duration);
         } else {
-          console.warn('No valid segments found in the route');
+          console.warn('No valid steps found in the route');
           setInstructions([]);
         }
-        previousRequestRef.current = {
-          currentLocation,
-          transportMode,
-          destination
-        };
-      } catch (error) {
-        if (axios.isCancel(error)) {
-          console.log('Request canceled:', error.message);
-        } else {
-          console.error('Error fetching route:', error);
-          setRoute(null);
-          setInstructions([]);
-        }
+      } else {
+        console.warn('No valid segments found in the route');
+        setInstructions([]);
       }
-    },
-    [transportMode, destination]
-  );
+    } catch (error) {
+      console.error('Error fetching route:', error);
+      setRoute(null);
+      setInstructions([]);
+    }
+  };
 
-  const updateCurrentInstruction = (location) => {
+  const updateCurrentInstruction = (userLocation) => {
     if (instructions.length === 0) return;
 
     const nextInstruction = instructions[currentInstructionIndex + 1];
 
     if (nextInstruction) {
       const nextWaypoint = route[nextInstruction.way_points[0]];
-      const distanceToNextWaypoint = calculateDistance(location, nextWaypoint);
+      const distanceToNextWaypoint = calculateDistance(
+        userLocation,
+        nextWaypoint
+      );
 
       if (distanceToNextWaypoint < 0.0124) {
         setCurrentInstructionIndex(currentInstructionIndex + 1);
@@ -286,6 +190,31 @@ const OpenStreetMapNavigation = () => {
         }
       }
     }
+  };
+
+  const calculateDistance = (point1, point2) => {
+    const earthRadiusMeters = 6371e3;
+    const latitude1Radians = (point1.latitude * Math.PI) / 180;
+    const latitude2Radians = (point2.latitude * Math.PI) / 180;
+    const latitudeDifferenceRadians =
+      ((point2.latitude - point1.latitude) * Math.PI) / 180;
+    const longitudeDifferenceRadians =
+      ((point2.longitude - point1.longitude) * Math.PI) / 180;
+
+    const a =
+      Math.sin(latitudeDifferenceRadians / 2) *
+        Math.sin(latitudeDifferenceRadians / 2) +
+      Math.cos(latitude1Radians) *
+        Math.cos(latitude2Radians) *
+        Math.sin(longitudeDifferenceRadians / 2) *
+        Math.sin(longitudeDifferenceRadians / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distanceInMeters = earthRadiusMeters * c;
+    const metersToMilesConversionFactor = 0.000621371;
+    const distanceInMiles = distanceInMeters * metersToMilesConversionFactor;
+
+    return distanceInMiles;
   };
 
   const speakInstruction = async (instruction) => {
@@ -332,7 +261,27 @@ const OpenStreetMapNavigation = () => {
                 transportMode === mode && styles.selectedModeButtonText
               ]}
             >
-              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              {mode === 'walking' && (
+                <MaterialCommunityIcons
+                  name="walk"
+                  size={24}
+                  color={transportMode === mode ? '#fff' : '#000'}
+                />
+              )}{' '}
+              {mode === 'cycling' && (
+                <MaterialCommunityIcons
+                  name="bike"
+                  size={24}
+                  color={transportMode === mode ? '#fff' : '#000'}
+                />
+              )}{' '}
+              {mode === 'driving' && (
+                <MaterialCommunityIcons
+                  name="car"
+                  size={24}
+                  color={transportMode === mode ? '#fff' : '#000'}
+                />
+              )}
             </Text>
           </TouchableOpacity>
         ))}
@@ -341,20 +290,17 @@ const OpenStreetMapNavigation = () => {
     [transportMode]
   );
 
-  const AudioToggle = useCallback(
-    () => (
-      <TouchableOpacity
-        style={styles.audioButton}
-        onPress={() => setIsAudioEnabled((prev) => !prev)}
-      >
-        <MaterialIcons
-          name={isAudioEnabled ? 'volume-up' : 'volume-off'}
-          size={24}
-          color={isAudioEnabled ? '#007AFF' : '#000'}
-        />
-      </TouchableOpacity>
-    ),
-    [isAudioEnabled]
+  const AudioToggle = () => (
+    <TouchableOpacity
+      style={styles.audioButton}
+      onPress={() => setIsAudioEnabled(!isAudioEnabled)}
+    >
+      <MaterialIcons
+        name={isAudioEnabled ? 'volume-up' : 'volume-off'}
+        size={24}
+        color={isAudioEnabled ? '#007AFF' : '#000'}
+      />
+    </TouchableOpacity>
   );
 
   const renderBottomSheetContent = useCallback(() => {
@@ -372,12 +318,24 @@ const OpenStreetMapNavigation = () => {
               style={styles.startButton}
               onPress={startNavigation}
             >
+              <MaterialCommunityIcons
+                name="navigation-outline"
+                size={24}
+                color="white"
+              />
               <Text style={styles.startButtonText}>Start</Text>
             </TouchableOpacity>
           )}
         </View>
         <View style={styles.bottomSheetInstructions}>
-          <View style={styles.bottomSheetDivider} />
+          <View
+            style={{
+              height: 5,
+              backgroundColor: '#f0f0f0',
+              alignSelf: 'stretch',
+              marginBottom: 10
+            }}
+          />
           <BottomSheetScrollView
             style={styles.bottomSheetInstructions}
             contentContainerStyle={styles.instructionsContainer}
@@ -395,7 +353,7 @@ const OpenStreetMapNavigation = () => {
                   {instruction.instruction}
                 </Text>
                 <Text style={styles.instructionDetails}>
-                  Distance: {instruction.distance.toFixed(2)} m | Duration:{' '}
+                  Distance: {instruction.distance.toFixed(2)} m  | Duration:{' '}
                   {(instruction.duration / 60).toFixed(2)} min
                 </Text>
                 {index === currentInstructionIndex && (
@@ -415,33 +373,34 @@ const OpenStreetMapNavigation = () => {
     instructions,
     currentInstructionIndex,
     isNavigating,
-    TransportModeSelector
+    transportMode,
+    isAudioEnabled
   ]);
 
   return (
     <Provider>
       <View style={styles.container}>
         <View style={styles.mapContainer}>
-          {currentLocation && (
+          {userLocation && (
             <MapView
               ref={mapRef}
               style={styles.map}
               provider={PROVIDER_DEFAULT}
               initialRegion={{
-                latitude: currentLocation.latitude,
-                longitude: currentLocation.longitude,
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421
               }}
               showsUserLocation={true}
             >
               <Marker
-                coordinate={currentLocation}
+                coordinate={userLocation}
                 pinColor="blue"
                 title="Your Location"
               />
               <Marker
-                coordinate={destination}
+                coordinate={destinationLocation}
                 pinColor="red"
                 title="Destination"
               />
@@ -462,6 +421,7 @@ const OpenStreetMapNavigation = () => {
               Duration: {(totalDuration / 60).toFixed(0)} min
             </Text>
           </View>
+
           <AudioToggle />
         </View>
         <BottomSheet
@@ -507,31 +467,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff'
   },
-  Modalcontainer: {
-    flex: 1,
-    backgroundColor: '#F7F7F8',
-    alignItems: 'center',
-    maxHeight: '100%',
-    alignContent: 'center',
-    marginVertical: 0
-  },
-  ModalButtonText: {
-    fontSize: 22,
-    fontWeight: '600',
-    lineHeight: 26.63,
-    letterSpacing: 0.25,
-    marginTop: 1,
-    color: '#fff'
-  },
-  Modalbutton: {
-    margin: 25,
-    backgroundColor: 'green',
-    borderRadius: 40,
-    width: '65%',
-    alignSelf: 'center',
-    marginBottom: 50,
-    padding: 2
-  },
   mapContainer: {
     height: Dimensions.get('window').height * 0.9
   },
@@ -569,20 +504,43 @@ const styles = StyleSheet.create({
   bottomSheetInstructions: {
     flex: 1
   },
-  instructionsContainer: {
-    paddingBottom: 20 // Add some padding at the bottom for better scrolling
+  Modalcontainer: {
+    flex: 1,
+    backgroundColor: 'white', // White background
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#000', // Adjust color if needed
+    marginVertical: 20,
+    textAlign: 'center',
+  },
+  Modalbutton: {
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+  },
+  ModalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   selectorContainer: {
     flexDirection: 'row',
-    flex: 1,
     backgroundColor: '#cfebc3',
     padding: 10,
     borderRadius: 10,
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    elevation: 3
   },
   modeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderRadius: 15
   },
   selectedModeButton: {
@@ -596,6 +554,9 @@ const styles = StyleSheet.create({
   selectedModeButtonText: {
     color: '#fff'
   },
+  icon: {
+    marginBottom: 5
+  },
   audioButton: {
     position: 'absolute',
     top: 70,
@@ -606,30 +567,40 @@ const styles = StyleSheet.create({
   },
   startButton: {
     backgroundColor: '#009933',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 15,
-    marginLeft: 10
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginLeft: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3
   },
   startButtonText: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold'
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8
   },
   endButton: {
-    backgroundColor: '#009933',
-    borderRadius: 20,
-    padding: 10,
-    display: 'flex',
+    backgroundColor: '#FF3B30',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    width: 'auto'
+    justifyContent: 'center',
+    marginVertical: 10,
   },
   endButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
   closeButton: {
     padding: 8
@@ -660,18 +631,7 @@ const styles = StyleSheet.create({
     width: 60,
     alignSelf: 'center',
     marginVertical: 10
-  },
-  bottomSheetDivider: {
-    height: 5,
-    backgroundColor: '#f0f0f0',
-    alignSelf: 'stretch',
-    marginBottom: 10
-  },
-  modalText: {
-    marginBottom: 20,
-    fontSize: 18,
-    padding: 5
   }
 });
 
-export default React.memo(OpenStreetMapNavigation);
+export default OpenStreetMapNavigation;

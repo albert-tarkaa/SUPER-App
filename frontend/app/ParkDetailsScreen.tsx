@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, LogBox } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import {
@@ -17,7 +17,7 @@ import WeatherDashboard from '@/components/WeatherDashboard';
 import Events from '@/components/Events';
 import CustomButton from '@/components/CustomButton';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { updateDestinationLocation } from '@/components/ReduxStore/Slices/locationSlice';
+import { getDestinationLocation, getUserLocation, setDestinationLocation } from '@/components/ReduxStore/Slices/locationSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import LottieView from 'lottie-react-native';
 
@@ -27,9 +27,6 @@ const ParkDetailsScreen = () => {
   const dispatch = useDispatch();
   const { parkDetails } = route.params;
   const [color, setColor] = useState('#009933');
-
-  const { latitude: locationLatitude, longitude: locationLongitude } =
-    useSelector((state) => state.location);
 
   const { latitude, longitude } = parkDetails;
   const parkDestination = { latitude, longitude };
@@ -42,12 +39,12 @@ const ParkDetailsScreen = () => {
   const snapPoints = useMemo(() => ['13%'], []);
 
   const handleNavigation = async () => {
-    await dispatch(updateDestinationLocation(parkDestination));
-    if (locationLatitude === null || locationLongitude === null) {
+    if (latitude === null || longitude === null) {
       setModalVisible(true);
       return; // Prevent navigation
     }
-    router.push('/Map'); // Adjust according to your routing setup
+    await dispatch(setDestinationLocation(parkDestination));
+    router.push('/Map');
   };
 
   const hideModal = () => {

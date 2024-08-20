@@ -1,6 +1,5 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import * as Location from 'expo-location';
-import { update } from 'lodash';
 
 export const getUserLocation = createAsyncThunk(
   'location/getUserLocation',
@@ -34,9 +33,13 @@ const locationSlice = createSlice({
       state.latitude = action.payload.latitude;
       state.longitude = action.payload.longitude;
     },
-    updateDestinationLocation: (state, action) => {
-      state.destinationLatitude = action.payload.destinationLatitude;
-      state.destinationLongitude = action.payload.destinationLongitude;
+    setDestinationLocation: (state, action) => {
+      state.destinationLatitude = action.payload.latitude;
+      state.destinationLongitude = action.payload.longitude;
+    },
+    clearDestinationLocation: (state) => {
+      state.destinationLatitude = null;
+      state.destinationLongitude = null;
     }
   },
   extraReducers: (builder) => {
@@ -57,6 +60,33 @@ const locationSlice = createSlice({
   }
 });
 
-export const { updateUserLocation, updateDestinationLocation } =
-  locationSlice.actions;
+export const {
+  updateUserLocation,
+  setDestinationLocation,
+  clearDestinationLocation
+} = locationSlice.actions;
 export default locationSlice.reducer;
+
+// Selector to get the destination location
+const selectLocation = (state) => state.location;
+
+export const getDestinationLocation = createSelector(
+  [selectLocation],
+  (location) => ({
+    latitude: location.destinationLatitude,
+    longitude: location.destinationLongitude
+  })
+);
+
+// Selector to get the user's current location
+export const getUserLocationSelector = (state) => ({
+  latitude: state.location.latitude,
+  longitude: state.location.longitude
+});
+
+// To fetch the user's location: dispatch(getUserLocation())
+// To manually update the user's location: dispatch(updateUserLocation({ latitude, longitude }))
+// To set the destination: dispatch(setDestinationLocation({ latitude, longitude }))
+// To clear the destination: dispatch(clearDestinationLocation())
+// To get the user's location: const userLocation = useSelector(getUserLocationSelector)
+// To get the destination location: const destination = useSelector(getDestinationLocation)
