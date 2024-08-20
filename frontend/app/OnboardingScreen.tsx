@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { TextInput, Text } from 'react-native-paper';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '@/components/CustomButton';
+import { useSelector } from 'react-redux';
 
 const { width, height } = Dimensions.get('window');
 
@@ -18,6 +18,13 @@ const OnboardingScreen = () => {
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigation = useNavigation();
+
+  const { isLoading, error, isAuthenticated, user } = useSelector((state) => state.auth);
+
+  if (isAuthenticated && user) {
+    navigation.navigate('(tabs)');
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
@@ -72,6 +79,8 @@ const OnboardingScreen = () => {
               //trim whitespace and convert to lowercase
               const processedEmail = email.trim().toLowerCase();
               navigation.navigate('LetsKnowYouScreen', { email: processedEmail, password })
+              setEmail('');
+              setPassword('');
             }}
           >
             Create Account

@@ -57,23 +57,97 @@ export const login = createAsyncThunk(
   }
 );
 
+export const signup = createAsyncThunk(
+  'auth/signup',
+  async (
+    { username, password, firstName, lastName, dob, gender },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        username,
+        password,
+        firstName,
+        lastName,
+        ...(dob && { dob }), // Include dob only if it's provided
+        ...(gender && { gender }) // Include gender only if it's provided
+      });
+
+      // Extract authToken and refreshToken
+      const { data } = response.data;
+      console.log('data', data);
+      // Destructure user data
+      const {
+        firstName: returnedFirstName,
+        lastName: returnedLastName,
+        dob: returnedDob,
+        gender: returnedGender,
+        role,
+        userId,
+        profileComplete,
+        authToken,
+        refreshToken
+      } = data;
+
+      const credentials = { authToken, refreshToken };
+      const credentialsString = JSON.stringify(credentials);
+      try {
+        await SecureStore.setItemAsync('auth', credentialsString);
+      } catch (error) {
+        console.error('Failed to save to Keychain:', error);
+      }
+
+      // Return user data including tokens
+      return {
+        user: {
+          username,
+          firstName: returnedFirstName,
+          lastName: returnedLastName,
+          dob: returnedDob,
+          gender: returnedGender,
+          role,
+          userId,
+          profileComplete
+        },
+        authToken,
+        refreshToken
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error);
+    }
+  }
+);
+
 export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
   async (_, { rejectWithValue }) => {
     try {
-      const credentials = await Keychain.getInternetCredentials(
-        'refreshTokenService'
-      );
-      if (!credentials) {
+      const storedCredentials = await SecureStore.getItemAsync('auth');
+      if (!storedCredentials) {
         throw new Error('No refresh token found');
       }
-      const response = await axios.post(`${API_URL}/refresh-token`, {
-        refreshToken: credentials.password
+
+      const { refreshToken } = JSON.parse(storedCredentials);
+
+      const response = await axios.post(`${API_URL}/refresh`, {
+        refreshToken
       });
-      await Keychain.setGenericPassword(
-        'accessToken',
-        response.data.accessToken
-      );
+
+      const { authToken: newAuthToken, refreshToken: newRefreshToken } =
+        response.data;
+
+      const newCredentials = {
+        authToken: newAuthToken,
+        refreshToken: newRefreshToken
+      };
+      const newCredentialsString = JSON.stringify(newCredentials);
+
+      try {
+        await SecureStore.setItemAsync('auth', newCredentialsString);
+      } catch (error) {
+        console.error('Failed to save to SecureStore:', error);
+      }
+
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -96,8 +170,9 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       // Clear Keychain credentials
-      Keychain.resetGenericPassword();
-      Keychain.resetInternetCredentials('refreshTokenService');
+      SecureStore.deleteItemAsync('auth').catch((error) =>
+        console.error('Failed to clear SecureStore:', error)
+      );
     }
   },
   extraReducers: (builder) => {
@@ -112,6 +187,19 @@ const authSlice = createSlice({
         state.user = action.payload.user;
       })
       .addCase(login.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(signup.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(signup.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+      })
+      .addCase(signup.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })

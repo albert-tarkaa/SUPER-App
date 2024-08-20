@@ -2,12 +2,18 @@ import { StyleSheet, ImageBackground } from 'react-native';
 import { Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
-import OnboardingScreen from './OnboardingScreen';
 import SignInScreen from './SignInScreen';
+import { useSelector } from 'react-redux';
 
 //main landing or entry file
 export default function index() {
   const navigation = useNavigation();
+
+  const { isLoading, error, isAuthenticated, user } = useSelector((state) => state.auth);
+
+  if (isAuthenticated && user) {
+    navigation.navigate('(tabs)');
+  }
 
   return (
     <ImageBackground
