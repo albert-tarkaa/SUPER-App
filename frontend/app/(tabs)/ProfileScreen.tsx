@@ -11,8 +11,6 @@ const ProfileScreen = () => {
     (state) => state.auth
   );
 
-  console.log('user', user);
-
   if (isAuthenticated && user) {
     navigation.navigate('(tabs)');
   }
