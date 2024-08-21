@@ -1,17 +1,35 @@
+import CustomAvatar from '@/components/CustomAvatar';
+import { useNavigation } from 'expo-router';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Avatar, Card, Title, Paragraph, List } from 'react-native-paper';
+import { useSelector } from 'react-redux';
 
 const ProfileScreen = () => {
+  const navigation = useNavigation();
+  const { isLoading, error, isAuthenticated, user } = useSelector(
+    (state) => state.auth
+  );
+
+  console.log('user', user);
+
+  if (isAuthenticated && user) {
+    navigation.navigate('(tabs)');
+  }
   return (
     <View style={styles.container}>
       <Card style={styles.nameCard}>
         <Card.Content>
           <View style={styles.header}>
-            <Avatar.Icon size={64} icon="account" style={styles.avatar} />
+            <CustomAvatar
+              size={60}
+              source={require('@/assets/images/icon.png')}
+            />
             <View>
-              <Paragraph>Owner</Paragraph>
-              <Title>Albert Tarkaa</Title>
+              <Paragraph>Name</Paragraph>
+              <Title>
+                {user.firstName} {user.lastName}
+              </Title>
             </View>
           </View>
         </Card.Content>
@@ -20,22 +38,20 @@ const ProfileScreen = () => {
       <Card style={styles.card}>
         <Card.Content>
           <Title style={styles.bline}>PERSONAL INFORMATION</Title>
-          <List.Item title="Sex" description="Male" style={styles.bline} />
-          <List.Item
-            title="Date of Birth"
-            description="11/12/98"
-            style={styles.bline}
-          />
-          <List.Item
-            title="Phone"
-            description="08134345335"
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            style={styles.bline}
-          />
+          {user?.gender && (
+            <List.Item title="Sex" description="Male" style={styles.bline} />
+          )}
+          {user?.dob && (
+            <List.Item
+              title="Date of birth"
+              description={user?.dob}
+              style={styles.bline}
+            />
+          )}
           <List.Item
             title="Email"
-            description="Agonsi.onyedikachi@gmail.com"
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            description={user?.username}
+            style={styles.bline}
           />
         </Card.Content>
       </Card>
