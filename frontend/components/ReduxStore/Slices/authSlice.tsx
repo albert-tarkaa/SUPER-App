@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
-import { first } from 'lodash';
 
 const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
