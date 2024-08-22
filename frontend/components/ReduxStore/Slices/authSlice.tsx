@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
+import { first } from 'lodash';
 
 const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -8,7 +9,7 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ username, password }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const response = await axios.post(`${API_URL}/auth/login/`, {
         username,
         password
       });
@@ -47,9 +48,52 @@ export const login = createAsyncThunk(
           role,
           userId,
           profileComplete
-        },
-        authToken,
-        refreshToken
+        }
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error);
+    }
+  }
+);
+
+export const loginWithGoogle = createAsyncThunk(
+  'auth/loginWithGoogle',
+  async ({ email, firstName, lastName }, { rejectWithValue }) => {
+    try {
+      // Here you would typically send this data to your backend
+      // to create or update the user account
+      const response = await axios.post(`${API_URL}/auth/googlelogin`, {
+        email,
+        firstName,
+        lastName
+      });
+
+      // Extract authToken and refreshToken
+      const { data } = response.data;
+      // Destructure user data
+      const { user, authToken, refreshToken } = data;
+
+      const { dob, gender, profileComplete, username, role } = user;
+
+      const credentials = { authToken, refreshToken };
+      const credentialsString = JSON.stringify(credentials);
+      try {
+        await SecureStore.setItemAsync('auth', credentialsString);
+      } catch (error) {
+        console.error('Failed to save to Keychain:', error);
+      }
+
+      // Return user data
+      return {
+        user: {
+          dob,
+          firstName,
+          gender,
+          lastName,
+          profileComplete,
+          username,
+          role
+        }
       };
     } catch (error) {
       return rejectWithValue(error.response?.data || error);
@@ -75,7 +119,6 @@ export const signup = createAsyncThunk(
 
       // Extract authToken and refreshToken
       const { data } = response.data;
-      console.log('data', data);
       // Destructure user data
       const {
         firstName: returnedFirstName,
@@ -108,9 +151,7 @@ export const signup = createAsyncThunk(
           role,
           userId,
           profileComplete
-        },
-        authToken,
-        refreshToken
+        }
       };
     } catch (error) {
       return rejectWithValue(error.response?.data || error);
@@ -187,6 +228,20 @@ const authSlice = createSlice({
         state.user = action.payload.user;
       })
       .addCase(login.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        console.log('=================', action.payload);
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })

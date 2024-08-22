@@ -1,36 +1,103 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
-import { TextInput, Button, Text, HelperText } from 'react-native-paper';
+import { TextInput, Text, HelperText } from 'react-native-paper';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
-import { login } from '@/components/ReduxStore/Slices/authSlice';
+import {
+  login,
+  loginWithGoogle
+} from '@/components/ReduxStore/Slices/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import * as WebBrowser from 'expo-web-browser';
+import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo';
+import * as Linking from 'expo-linking';
 
 const { width, height } = Dimensions.get('window');
 
 const IMAGE_WIDTH_PERCENTAGE = (80.29 / width) * 100;
 const IMAGE_HEIGHT_PERCENTAGE = (135.05 / height) * 100;
 
+export const useWarmUpBrowser = () => {
+  useEffect(() => {
+    void WebBrowser.warmUpAsync();
+    return () => {
+      void WebBrowser.coolDownAsync();
+    };
+  }, []);
+};
+
+WebBrowser.maybeCompleteAuthSession();
+
 const SignInScreen = () => {
+  useWarmUpBrowser();
   const navigation = useNavigation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const redirectUrl = Linking.createURL('/HomeScreen', { scheme: 'myapp' });
+
+  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
+  const { isSignedIn, getToken } = useAuth();
+  const { user, isLoaded } = useUser();
 
   const dispatch = useDispatch();
-  const { isLoading, error, isAuthenticated, user } = useSelector((state) => state.auth);
+  const { error } = useSelector((state) => state.auth);
 
   const handleLogin = async () => {
     const processedUsername = username.trim().toLowerCase();
     await dispatch(login({ username: processedUsername, password }));
   };
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      navigation.navigate('(tabs)');
+  const onPressGoogle = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const { createdSessionId, setActive } = await startOAuthFlow({
+        redirectUrl
+      });
+
+      if (createdSessionId) {
+        await setActive({ session: createdSessionId });
+      } else {
+        console.log('OAuth flow did not complete');
+      }
+    } catch (err) {
+      console.error('OAuth error', err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [isAuthenticated, user, navigation]);
+  }, [dispatch, navigation, startOAuthFlow, user, redirectUrl, getToken]);
+
+  useEffect(() => {
+    const checkAuthAndNavigate = async () => {
+      if (isLoaded) {
+        if (isSignedIn) {
+          const userData = {
+            email: user?.primaryEmailAddress?.emailAddress,
+            firstName: user?.firstName,
+            lastName: user?.lastName
+          };
+          if (userData) {
+            const result = await dispatch(loginWithGoogle(userData));
+            try {
+              if (loginWithGoogle.fulfilled.match(result)) {
+                navigation.navigate('(tabs)');
+              } else {
+                console.error('Failed to update application state');
+              }
+            } catch {
+              // Empty catch block
+            }
+          } else {
+            console.log('User is not signed in');
+          }
+        }
+      }
+    };
+    checkAuthAndNavigate();
+  }, [isSignedIn, isLoaded, navigation]);
 
   return (
     <View style={styles.container}>
@@ -92,7 +159,7 @@ const SignInScreen = () => {
 
         <CustomButton
           mode="outlined"
-          onPress={() => navigation.navigate('(tabs)')}
+          onPress={onPressGoogle}
           rippleColor="#f1f1f1"
         >
           Continue with Google

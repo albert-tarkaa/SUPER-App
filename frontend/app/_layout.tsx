@@ -16,6 +16,16 @@ import { Provider } from 'react-redux';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { store } from '@/components/ReduxStore';
+import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
+import * as SecureStore from 'expo-secure-store';
+
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+if (!publishableKey) {
+  throw new Error(
+    'Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env'
+  );
+}
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -39,85 +49,87 @@ export default function RootLayout() {
   }
 
   return (
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <ThemeProvider
-            value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-          >
-            <Stack>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="OnboardingScreen"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="SignInScreen"
-                options={{
-                  headerShown: false,
-                  headerTitle: '',
-                  headerBackTitleVisible: false,
-                  headerTransparent: true
-                }}
-              />
-              <Stack.Screen
-                name="LetsKnowYouScreen"
-                options={{
-                  headerTitle: 'Let’s get to know you.',
-                  headerBackTitleVisible: false,
-                  headerTitleAlign: 'center',
-                  headerTransparent: true,
-                  headerStyle: {
-                    backgroundColor: '#009933'
-                  },
-                  headerLeft: () => (
-                    <Ionicons
-                      name="chevron-back"
-                      size={24}
-                      color="#fff"
-                      onPress={() => navigation.goBack()}
-                    />
-                  )
-                }}
-              />
-              <Stack.Screen
-                name="ForgotPasswordScreen"
-                options={{
-                  headerTitle: '',
-                  headerBackTitleVisible: false,
-                  headerTransparent: true
-                }}
-              />
-              <Stack.Screen
-                name="ResetPasswordScreen"
-                options={{
-                  headerTitle: '',
-                  headerBackTitleVisible: false,
-                  headerTransparent: true
-                }}
-              />
+    <ClerkProvider publishableKey={publishableKey}>
+      <ClerkLoaded>
+        <Provider store={store}>
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <ThemeProvider
+                value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
+              >
+                <Stack>
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="OnboardingScreen"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="SignInScreen"
+                    options={{
+                      headerShown: false,
+                      headerTitle: '',
+                      headerBackTitleVisible: false,
+                      headerTransparent: true
+                    }}
+                  />
+                  <Stack.Screen
+                    name="LetsKnowYouScreen"
+                    options={{
+                      headerTitle: 'Let’s get to know you.',
+                      headerBackTitleVisible: false,
+                      headerTitleAlign: 'center',
+                      headerTransparent: true,
+                      headerStyle: {
+                        backgroundColor: '#009933'
+                      },
+                      headerLeft: () => (
+                        <Ionicons
+                          name="chevron-back"
+                          size={24}
+                          color="#fff"
+                          onPress={() => navigation.goBack()}
+                        />
+                      )
+                    }}
+                  />
+                  <Stack.Screen
+                    name="ForgotPasswordScreen"
+                    options={{
+                      headerTitle: '',
+                      headerBackTitleVisible: false,
+                      headerTransparent: true
+                    }}
+                  />
+                  <Stack.Screen
+                    name="ResetPasswordScreen"
+                    options={{
+                      headerTitle: '',
+                      headerBackTitleVisible: false,
+                      headerTransparent: true
+                    }}
+                  />
 
-              <Stack.Screen
-                name="ParkDetailsScreen"
-                options={{
-                  headerTitle: 'Park Details',
-                  headerTitleAlign: 'center',
-                  headerBackTitleVisible: false,
-                  headerTransparent: true,
-                  headerStyle: {
-                    backgroundColor: '#009933'
-                  },
-                  headerLeft: () => (
-                    <Ionicons
-                      name="chevron-back"
-                      size={24}
-                      color="#fff"
-                      onPress={() => navigation.goBack()}
-                    />
-                  )
-                }}
-              />
-              {/* <Stack.Screen
+                  <Stack.Screen
+                    name="ParkDetailsScreen"
+                    options={{
+                      headerTitle: 'Park Details',
+                      headerTitleAlign: 'center',
+                      headerBackTitleVisible: false,
+                      headerTransparent: true,
+                      headerStyle: {
+                        backgroundColor: '#009933'
+                      },
+                      headerLeft: () => (
+                        <Ionicons
+                          name="chevron-back"
+                          size={24}
+                          color="#fff"
+                          onPress={() => navigation.goBack()}
+                        />
+                      )
+                    }}
+                  />
+                  {/* <Stack.Screen
               name="NavigationScreen"
               options={{
                 headerTitle: 'Navigation',
@@ -138,12 +150,17 @@ export default function RootLayout() {
               }}
             /> */}
 
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-          </ThemeProvider>
-        </GestureHandlerRootView>
-      </QueryClientProvider>
-    </Provider>
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="+not-found" />
+                </Stack>
+              </ThemeProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </Provider>
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }

@@ -1,19 +1,21 @@
 import CustomAvatar from '@/components/CustomAvatar';
-import { useNavigation } from 'expo-router';
-import React from 'react';
+import { router } from 'expo-router';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Avatar, Card, Title, Paragraph, List } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 
 const ProfileScreen = () => {
-  const navigation = useNavigation();
   const { isLoading, error, isAuthenticated, user } = useSelector(
     (state) => state.auth
   );
 
-  if (isAuthenticated && user) {
-    navigation.navigate('(tabs)');
-  }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('(tabs)');
+    }
+  });
+
   return (
     <View style={styles.container}>
       <Card style={styles.nameCard}>
@@ -26,7 +28,7 @@ const ProfileScreen = () => {
             <View>
               <Paragraph>Name</Paragraph>
               <Title>
-                {user.firstName} {user.lastName}
+                {user?.firstName} {user?.lastName}
               </Title>
             </View>
           </View>
@@ -46,11 +48,13 @@ const ProfileScreen = () => {
               style={styles.bline}
             />
           )}
-          <List.Item
-            title="Email"
-            description={user?.username}
-            style={styles.bline}
-          />
+          {user?.username && (
+            <List.Item
+              title="Email"
+              description={user?.username}
+              style={styles.bline}
+            />
+          )}
         </Card.Content>
       </Card>
     </View>
