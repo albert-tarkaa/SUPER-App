@@ -73,7 +73,7 @@ export const loginWithGoogle = createAsyncThunk(
       // Destructure user data
       const { user, authToken, refreshToken } = data;
 
-      const { dob, gender, profileComplete, username, role } = user;
+      const { dob, gender, profileComplete, username, role, id } = user;
 
       const credentials = { authToken, refreshToken };
       const credentialsString = JSON.stringify(credentials);
@@ -92,11 +92,17 @@ export const loginWithGoogle = createAsyncThunk(
           lastName,
           profileComplete,
           username,
-          role
+          role,
+          userId: id
         }
       };
     } catch (error) {
-      return rejectWithValue(error.response?.data || error);
+      console.error('LoginWithGoogle error:', error);
+      return rejectWithValue(
+        error.response?.data || {
+          message: 'An error occurred during Google login'
+        }
+      );
     }
   }
 );
@@ -226,6 +232,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -236,9 +243,9 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginWithGoogle.fulfilled, (state, action) => {
-        console.log('=================', action.payload);
         state.isLoading = false;
         state.isAuthenticated = true;
+        state.error = null;
         state.user = action.payload.user;
       })
       .addCase(loginWithGoogle.rejected, (state, action) => {
@@ -253,6 +260,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.error = null;
       })
       .addCase(signup.rejected, (state, action) => {
         state.isLoading = false;
@@ -261,6 +269,7 @@ const authSlice = createSlice({
       .addCase(refreshToken.fulfilled, (state, action) => {
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.error = null;
       })
       .addCase(refreshToken.rejected, (state) => {
         state.isAuthenticated = false;

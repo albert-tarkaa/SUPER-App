@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -20,11 +20,13 @@ const LetsKnowYouScreen = () => {
   const [gender, setGender] = useState('');
   const formattedDate = date.toISOString().split('T')[0];
 
-  const { isLoading, error, isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
-  if (isAuthenticated && user) {
-    navigation.navigate('(tabs)');
-  }
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigation.navigate('(tabs)');
+    }
+  }, [isAuthenticated, user, navigation]);
 
   const handleSignup = async () => {
     try {

@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
 import { TextInput, Text } from 'react-native-paper';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '@/components/CustomButton';
-import { useSelector } from 'react-redux';
+import { loginWithGoogle } from '@/components/ReduxStore/Slices/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import * as WebBrowser from 'expo-web-browser';
+import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo';
+import * as Linking from 'expo-linking';
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,17 +17,92 @@ const { width, height } = Dimensions.get('window');
 const IMAGE_WIDTH_PERCENTAGE = (80.29 / width) * 100;
 const IMAGE_HEIGHT_PERCENTAGE = (135.05 / height) * 100;
 
+export const useWarmUpBrowser = () => {
+  useEffect(() => {
+    void WebBrowser.warmUpAsync();
+    return () => {
+      void WebBrowser.coolDownAsync();
+    };
+  }, []);
+};
+
+WebBrowser.maybeCompleteAuthSession();
+
 const OnboardingScreen = () => {
+  useWarmUpBrowser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const navigation = useNavigation();
+  const redirectUrl = Linking.createURL('/HomeScreen', { scheme: 'myapp' });
 
-  const { isLoading, error, isAuthenticated, user } = useSelector((state) => state.auth);
+  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
+  const { isSignedIn, getToken } = useAuth();
+  const { user: oauthUser, isLoaded } = useUser();
 
-  if (isAuthenticated && user) {
-    navigation.navigate('(tabs)');
-  }
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigation.navigate('(tabs)');
+    }
+  }, [isAuthenticated, user, navigation]);
+
+  const handleCreateAccount = () => {
+    const processedEmail = email.trim().toLowerCase();
+    navigation.navigate('LetsKnowYouScreen', {
+      email: processedEmail,
+      password
+    });
+    setEmail('');
+    setPassword('');
+  };
+
+  const onPressGoogle = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const { createdSessionId, setActive } = await startOAuthFlow({
+        redirectUrl
+      });
+
+      if (createdSessionId) {
+        await setActive({ session: createdSessionId });
+      } else {
+        console.log('OAuth flow did not complete');
+      }
+    } catch (err) {
+      console.error('OAuth error', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dispatch, navigation, startOAuthFlow, oauthUser, redirectUrl, getToken]);
+
+  useEffect(() => {
+    const checkAuthAndNavigate = async () => {
+      if (isLoaded && isSignedIn && oauthUser) {
+        const userData = {
+          email: oauthUser.primaryEmailAddress?.emailAddress,
+          firstName: oauthUser.firstName,
+          lastName: oauthUser.lastName
+        };
+        try {
+          const result = await dispatch(loginWithGoogle(userData));
+          if (loginWithGoogle.fulfilled.match(result)) {
+            navigation.navigate('(tabs)');
+          } else {
+            console.error('Failed to update application state:', result.payload);
+          }
+        } catch (error) {
+          console.error('Error during loginWithGoogle dispatch:', error);
+        }
+      }
+    };
+    checkAuthAndNavigate();
+  }, [isSignedIn, isLoaded, oauthUser, dispatch, navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -73,16 +152,7 @@ const OnboardingScreen = () => {
             onChangeText={setPassword}
           />
 
-          <CustomButton
-            mode="contained"
-            onPress={() => {
-              //trim whitespace and convert to lowercase
-              const processedEmail = email.trim().toLowerCase();
-              navigation.navigate('LetsKnowYouScreen', { email: processedEmail, password })
-              setEmail('');
-              setPassword('');
-            }}
-          >
+          <CustomButton mode="contained" onPress={handleCreateAccount}>
             Create Account
           </CustomButton>
 
@@ -99,7 +169,7 @@ const OnboardingScreen = () => {
 
           <CustomButton
             mode="outlined"
-            onPress={() => navigation.navigate('(tabs)')}
+            onPress={onPressGoogle}
             rippleColor="#f1f1f1"
           >
             Continue with Google
@@ -154,7 +224,7 @@ const styles = StyleSheet.create({
     color: '#909090'
   },
   input: {
-    marginBottom: 20,
+    marginBottom: 10,
     backgroundColor: 'white'
   },
   buttonContent: {
@@ -193,7 +263,7 @@ const styles = StyleSheet.create({
   signInContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 30
+    marginTop: 15
   },
   signInText: {
     color: 'green',

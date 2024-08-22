@@ -4,16 +4,23 @@ import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
 import SignInScreen from './SignInScreen';
 import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 
 //main landing or entry file
-export default function index() {
+export default function Index() {
   const navigation = useNavigation();
 
-  const { isLoading, error, isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
-  if (isAuthenticated && user) {
-    navigation.navigate('(tabs)');
-  }
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigation.navigate('(tabs)');
+    }
+  }, [isAuthenticated, user, navigation]);
+
+  const handleGetStarted = () => {
+    navigation.navigate('SignInScreen');
+  };
 
   return (
     <ImageBackground
@@ -32,7 +39,7 @@ export default function index() {
       <View style={styles.container}>
         <CustomButton
           mode="outlined"
-          onPress={() => navigation.navigate(SignInScreen)}
+          onPress={handleGetStarted}
           style={styles.button}
           color="white"
         >
