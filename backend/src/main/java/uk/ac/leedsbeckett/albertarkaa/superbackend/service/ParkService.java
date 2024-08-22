@@ -24,7 +24,7 @@ public class ParkService {
 
     private final ParkRepository parkRepository;
     private final AuthServiceImplementation authServiceImplementation;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
 
     // This method retrieves parks
     public ControllerResponse<List<ParksResponse>> getParks(String parkName) {

@@ -5,10 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.AuthenticationRequest;
-import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.RefreshTokenRequest;
-import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.RegisterRequest;
-import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.ResetPasswordRequest;
+import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.*;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.response.ControllerResponse;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.response.auth.AuthenticationResponse;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.service.AuthenticationService;
@@ -75,10 +72,10 @@ public class AuthenticationController {
     }
 
     // Handle POST requests to /api/v1/auth/google
-    @PostMapping("/google")
-    public ResponseEntity<ControllerResponse<Object>> googleAuth(@RequestBody String code) {
+    @PostMapping("/googlelogin")
+    public ResponseEntity<ControllerResponse<Object>> googleAuth(@RequestBody GoogleAuthRequest request) {
         // Call the AuthenticationService to authenticate a user using Google OAuth code
-        ControllerResponse<Object> response = authenticationService.authenticateGoogle(code);
+        ControllerResponse<Object> response = authenticationService.authenticateGoogle(request.getEmail(), request.getFirstName(), request.getLastName());
 
         // Check if the Google authentication response is successful
         if (response.isSuccess()) {

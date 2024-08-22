@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import uk.ac.leedsbeckett.albertarkaa.superbackend.model.UserModel;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -12,15 +13,8 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserResponse {
+public class AuthResponse {
     private String authToken;
     private String refreshToken;
-    private String username;
-    private String firstName;
-    private String lastName;
-    private LocalDate dob;
-    private String gender;
-    private String role;
-    private boolean isProfileComplete;
-    private UUID userId;
+    private UserModel user;
 }

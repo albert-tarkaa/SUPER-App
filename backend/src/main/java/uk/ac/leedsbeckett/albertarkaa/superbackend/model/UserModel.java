@@ -52,6 +52,7 @@ public class UserModel implements UserDetails {
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
+    private String authMethod;
 
     @Enumerated(EnumType.STRING)
     private Role role;

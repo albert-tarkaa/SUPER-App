@@ -1,5 +1,4 @@
 package uk.ac.leedsbeckett.albertarkaa.superbackend.service;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -15,13 +14,12 @@ import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.Authenticati
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.RefreshTokenRequest;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.RegisterRequest;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.request.auth.ResetPasswordRequest;
+import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.response.AuthResponse;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.response.ControllerResponse;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.response.UserResponse;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.dto.response.auth.AuthenticationResponse;
-import uk.ac.leedsbeckett.albertarkaa.superbackend.model.GoogleTokens;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.model.UserModel;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.repository.UserRepository;
-import uk.ac.leedsbeckett.albertarkaa.superbackend.util.Authentication.GoogleTokenVerifier;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.util.Authentication.JwtService;
 import uk.ac.leedsbeckett.albertarkaa.superbackend.util.Authentication.Role;
 
@@ -34,13 +32,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final RefreshTokenService RefreshTokenService;
-    private final GoogleTokenVerifier googleTokenVerifier;
+    private final RefreshTokenService refreshTokenService;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
+
 
     @Transactional // This annotation is used to indicate that the method should be run within a transaction
     // This method is used to register a new user
@@ -84,6 +83,8 @@ public class AuthenticationService {
                     .gender(registerRequest.getGender())
                     .createdAt(java.time.LocalDateTime.now())
                     .lastLogin(java.time.LocalDateTime.now())
+                    .isProfileComplete(true)
+                    .authMethod("email")
                     .role(Role.USER)
                     .build();
             userRepository.save(user);
@@ -96,7 +97,7 @@ public class AuthenticationService {
             String jwtToken = jwtService.generateToken(user);
             String refreshToken = jwtService.generateRefreshToken(user.getUsername());
 
-            RefreshTokenService.saveToken(user.getId(), refreshToken);
+            refreshTokenService.saveToken(user.getId(), refreshToken);
 
             return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
                     .authToken(jwtToken)
@@ -138,7 +139,7 @@ public class AuthenticationService {
             String jwtToken = jwtService.generateToken(user);
             String refreshToken = jwtService.generateRefreshToken(user.getUsername());
 
-            RefreshTokenService.saveToken(user.getId(), refreshToken);
+            refreshTokenService.saveToken(user.getId(), refreshToken);
 
             return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
                     .authToken(jwtToken)
@@ -177,7 +178,7 @@ public class AuthenticationService {
                 return new ControllerResponse<>(false, "Please complete your profile", null);
             }
 
-            if (!RefreshTokenService.validateToken(userId, token)) {
+            if (!refreshTokenService.validateToken(userId, token)) {
                 return new ControllerResponse<>(false, "Invalid refresh token", null);
             }
 
@@ -247,6 +248,7 @@ public class AuthenticationService {
                     .role(userModel.getRole().name())
                     .isProfileComplete(userModel.isProfileComplete())
                     .authToken(token)
+                    .refreshToken(jwtService.generateRefreshToken(userModel.getUsername()))
                     .userId(userModel.getId())
                     .build())).orElseGet(() -> new ControllerResponse<>(false, "Invalid  account details", null));
 
@@ -257,28 +259,8 @@ public class AuthenticationService {
     }
 
     // This method is used to authenticate the user using Google
-    public ControllerResponse<Object> authenticateGoogle(String code) {
+    public ControllerResponse<Object> authenticateGoogle(String email, String firstName, String lastName) {
         try {
-            // Exchange the authorization code for tokens
-            GoogleTokens googleTokens = googleTokenVerifier.exchangeCodeForTokens(code);
-
-            // Verify the ID token
-            GoogleIdToken idToken = googleTokenVerifier.verify(googleTokens.getIdToken());
-            if (idToken == null) {
-                return ControllerResponse.builder()
-                        .success(false)
-                        .errorMessage("Invalid ID token")
-                        .data(null)
-                        .build();
-            }
-
-            // Extract user information from the ID token
-            GoogleIdToken.Payload payload = idToken.getPayload();
-            String email = payload.getEmail();
-            String firstName = (String) payload.get("given_name");
-            String lastName = (String) payload.get("family_name");
-
-
             // Check if the user exists, if not, create a new user
             UserModel user = userRepository.findByUsername(email)
                     .orElseGet(() -> {
@@ -286,22 +268,37 @@ public class AuthenticationService {
                         newUser.setUsername(email);
                         newUser.setFirstName(firstName);
                         newUser.setLastName(lastName);
+                        newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
                         newUser.setCreatedAt(java.time.LocalDateTime.now());
                         newUser.setLastLogin(java.time.LocalDateTime.now());
                         newUser.setRole(Role.USER);
+                        newUser.setProfileComplete(true);
+                        newUser.setAuthMethod("google");
                         return userRepository.save(newUser);
                     });
+
+            // Update last login time and auth method
+            user.setLastLogin(java.time.LocalDateTime.now());
+            user.setAuthMethod("google");
+            userRepository.save(user);
 
             // Generate JWT tokens
             String accessToken = jwtService.generateToken(user);
             String refreshToken = jwtService.generateRefreshToken(email);
 
-            RefreshTokenService.saveToken(user.getId(), refreshToken);
+            refreshTokenService.saveToken(user.getId(), refreshToken);
+
+            // Create response data
+            AuthResponse authResponse = AuthResponse.builder()
+                    .authToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .user(user)
+                    .build();
 
             return ControllerResponse.builder()
                     .success(true)
                     .errorMessage(null)
-                    .data("User registered successfully")
+                    .data(authResponse)
                     .build();
         } catch (Exception e) {
             logger.error("An error occurred", e);
