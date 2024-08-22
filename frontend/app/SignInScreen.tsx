@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, Image, Dimensions, TouchableOpacity } from 'react-native';
 import { TextInput, Text, HelperText } from 'react-native-paper';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
@@ -171,6 +171,16 @@ const SignInScreen = () => {
             Sign Up
           </Link>
         </View>
+        {/* Touchable Text for Privacy Policy */}
+        <TouchableOpacity
+          onPress={() =>
+            Linking.openURL(
+              'https://albert-tarkaa.github.io/super-app-user-policy/'
+            )
+          }
+        >
+          <Text style={styles.PolicyContainer}>Privacy policy</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -240,6 +250,12 @@ const styles = StyleSheet.create({
   signUpTextNormal: {
     color: 'black',
     fontSize: 16
+  },
+  PolicyContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30,
+    color: 'green'
   }
 });
 
