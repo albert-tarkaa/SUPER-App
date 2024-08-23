@@ -1,13 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, Image, Dimensions, TouchableOpacity } from 'react-native';
-import { TextInput, Text, HelperText } from 'react-native-paper';
+import { TextInput, Text, HelperText, Paragraph } from 'react-native-paper';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
-import {
-  login,
-  loginWithGoogle
-} from '@/components/ReduxStore/Slices/authSlice';
+import { login, loginWithGoogle } from '@/components/ReduxStore/Slices/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo';
@@ -102,10 +99,7 @@ const SignInScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Image
-          source={require('@/assets/images/icon.png')}
-          style={styles.logo}
-        />
+        <Image source={require('@/assets/images/icon.png')} style={styles.logo} />
         <Text style={styles.title}>Sign In</Text>
 
         <TextInput
@@ -123,12 +117,7 @@ const SignInScreen = () => {
           mode="outlined"
           style={styles.input}
           outlineStyle={styles.inputOutline}
-          right={
-            <TextInput.Icon
-              icon={passwordVisible ? 'eye-off' : 'eye'}
-              onPress={() => setPasswordVisible(!passwordVisible)}
-            />
-          }
+          right={<TextInput.Icon icon={passwordVisible ? 'eye-off' : 'eye'} onPress={() => setPasswordVisible(!passwordVisible)} />}
           textColor="#000"
           selectionColor="#000"
           placeholder="Password"
@@ -151,16 +140,16 @@ const SignInScreen = () => {
           onPress={handleLogin}
           rippleColor="#f1f1f1"
           labelStyle={styles.buttonLabel}
+          style={styles.button}
         >
           Sign In
         </CustomButton>
-
-        <Text style={styles.orText}>OR</Text>
 
         <CustomButton
           mode="outlined"
           onPress={onPressGoogle}
           rippleColor="#f1f1f1"
+          style={styles.button}
         >
           Continue with Google
         </CustomButton>
@@ -172,15 +161,14 @@ const SignInScreen = () => {
           </Link>
         </View>
         {/* Touchable Text for Privacy Policy */}
-        <TouchableOpacity
-          onPress={() =>
-            Linking.openURL(
-              'https://albert-tarkaa.github.io/super-app-user-policy/'
-            )
-          }
-        >
-          <Text style={styles.PolicyContainer}>Privacy policy</Text>
-        </TouchableOpacity>
+        <View style={styles.policyContainer}>
+          <Text style={styles.policyText}>
+            By signing up, you agree to the{' '}
+            <Text style={styles.policyLink} onPress={() => Linking.openURL('https://albert-tarkaa.github.io/super-app-user-policy/')}>
+              Privacy policy
+            </Text>
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -195,6 +183,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: 'center'
+  },
+  button: {
+    marginVertical: 10
   },
   logo: {
     width: `${IMAGE_WIDTH_PERCENTAGE}%`,
@@ -227,9 +218,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   orText: {
-    textAlign: 'center',
-    marginVertical: 10,
-    color: 'gray'
+    marginVertical: 8
   },
   forgotPasswordLink: {
     color: 'green',
@@ -251,11 +240,19 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 16
   },
-  PolicyContainer: {
-    flexDirection: 'row',
+  policyContainer: {
+    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 30,
-    color: 'green'
+    marginTop: 20
+  },
+  policyText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#555'
+  },
+  policyLink: {
+    color: '#007AFF',
+    textDecorationLine: 'underline'
   }
 });
 
