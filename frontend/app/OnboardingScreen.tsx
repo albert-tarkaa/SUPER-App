@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo';
 import * as Linking from 'expo-linking';
+import PasswordValidation from '@/components/Utils/PasswordValidation';
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,6 +34,7 @@ const OnboardingScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const navigation = useNavigation();
@@ -108,10 +110,7 @@ const OnboardingScreen = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
         <View style={styles.content}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.logo}
-          />
+          <Image source={require('@/assets/images/icon.png')} style={styles.logo} />
           <Text style={styles.title}>Welcome to SUPER!</Text>
           <Text style={styles.subtitle}>Create an account to continue</Text>
 
@@ -139,12 +138,7 @@ const OnboardingScreen = () => {
               borderWidth: 1,
               borderRadius: 12
             }}
-            right={
-              <TextInput.Icon
-                icon={passwordVisible ? 'eye-off' : 'eye'}
-                onPress={() => setPasswordVisible(!passwordVisible)}
-              />
-            }
+            right={<TextInput.Icon icon={passwordVisible ? 'eye-off' : 'eye'} onPress={() => setPasswordVisible(!passwordVisible)} />}
             textColor="#000"
             selectionColor="#000"
             placeholder="Password"
@@ -152,33 +146,24 @@ const OnboardingScreen = () => {
             onChangeText={setPassword}
           />
 
+          <PasswordValidation password={password} onValidationChange={setIsPasswordValid} />
+
           <CustomButton mode="contained" onPress={handleCreateAccount}>
             Create Account
           </CustomButton>
 
-          <CustomButton
-            mode="outlined"
-            onPress={() => navigation.navigate('(tabs)')}
-            rippleColor="#f1f1f1"
-            style={styles.skipButton}
-          >
+          <CustomButton mode="outlined" onPress={() => navigation.navigate('(tabs)')} rippleColor="#f1f1f1" style={styles.skipButton}>
             Skip
           </CustomButton>
 
           <Text style={styles.orText}>OR</Text>
 
-          <CustomButton
-            mode="outlined"
-            onPress={onPressGoogle}
-            rippleColor="#f1f1f1"
-          >
+          <CustomButton mode="outlined" onPress={onPressGoogle} rippleColor="#f1f1f1">
             Continue with Google
           </CustomButton>
 
           <View style={styles.signInContainer}>
-            <Text style={styles.signInTextNormal}>
-              Already have an account?{' '}
-            </Text>
+            <Text style={styles.signInTextNormal}>Already have an account? </Text>
             <Text style={styles.signInText}>
               <Link to="/SignInScreen">Sign In</Link>
             </Text>

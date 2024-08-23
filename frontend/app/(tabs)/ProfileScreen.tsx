@@ -6,9 +6,9 @@ import { Avatar, Card, Title, Paragraph, List } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 
 const ProfileScreen = () => {
-  const { isLoading, error, isAuthenticated, user } = useSelector(
-    (state) => state.auth
-  );
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+  console.log('user', user);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -21,10 +21,7 @@ const ProfileScreen = () => {
       <Card style={styles.nameCard}>
         <Card.Content>
           <View style={styles.header}>
-            <CustomAvatar
-              size={60}
-              source={require('@/assets/images/icon.png')}
-            />
+            <CustomAvatar size={60} source={require('@/assets/images/icon.png')} />
             <View>
               <Paragraph>Name</Paragraph>
               <Title>
@@ -38,23 +35,9 @@ const ProfileScreen = () => {
       <Card style={styles.card}>
         <Card.Content>
           <Title style={styles.bline}>PERSONAL INFORMATION</Title>
-          {user?.gender && (
-            <List.Item title="Sex" description="Male" style={styles.bline} />
-          )}
-          {user?.dob && (
-            <List.Item
-              title="Date of birth"
-              description={user?.dob}
-              style={styles.bline}
-            />
-          )}
-          {user?.username && (
-            <List.Item
-              title="Email"
-              description={user?.username}
-              style={styles.bline}
-            />
-          )}
+          {user?.gender && <List.Item title="Sex" description="Male" style={styles.bline} />}
+          {user?.dob && <List.Item title="Date of birth" description={user?.dob} style={styles.bline} />}
+          {user?.username && <List.Item title="Email" description={user?.username} style={styles.bline} />}
         </Card.Content>
       </Card>
     </View>

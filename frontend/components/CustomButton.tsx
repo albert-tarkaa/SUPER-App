@@ -10,6 +10,7 @@ const CustomButton = ({
   contentStyle, 
   rippleColor,
   children,
+  disabled,
   color
 }) => {
   const buttonStyle =
@@ -28,6 +29,7 @@ const CustomButton = ({
       contentStyle={[styles.buttonContent, contentStyle]}
       rippleColor={rippleColor}
       color={color}
+      disabled={disabled}
     >
       {children}
     </Button>

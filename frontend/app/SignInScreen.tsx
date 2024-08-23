@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo';
 import * as Linking from 'expo-linking';
+import PasswordValidation from '@/components/Utils/PasswordValidation';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,6 +33,7 @@ const SignInScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const redirectUrl = Linking.createURL('/HomeScreen', { scheme: 'myapp' });
@@ -125,6 +127,8 @@ const SignInScreen = () => {
           onChangeText={setPassword}
         />
 
+        <PasswordValidation password={password} onValidationChange={setIsPasswordValid} />
+
         {error && (
           <HelperText type="error" visible>
             * {error.errorMessage}
@@ -135,22 +139,11 @@ const SignInScreen = () => {
           Forgot Password?
         </Link>
 
-        <CustomButton
-          mode="contained"
-          onPress={handleLogin}
-          rippleColor="#f1f1f1"
-          labelStyle={styles.buttonLabel}
-          style={styles.button}
-        >
+        <CustomButton mode="contained" rippleColor="#f1f1f1" onPress={handleLogin} disabled={!isPasswordValid} labelStyle={styles.buttonLabel} style={styles.button}>
           Sign In
         </CustomButton>
 
-        <CustomButton
-          mode="outlined"
-          onPress={onPressGoogle}
-          rippleColor="#f1f1f1"
-          style={styles.button}
-        >
+        <CustomButton mode="outlined" onPress={onPressGoogle} rippleColor="#f1f1f1" style={styles.button}>
           Continue with Google
         </CustomButton>
 
