@@ -100,26 +100,6 @@ export default function RootLayout() {
                       headerLeft: () => <Ionicons name="chevron-back" size={24} color="#fff" onPress={() => navigation.goBack()} />
                     }}
                   />
-                  {/* <Stack.Screen
-              name="NavigationScreen"
-              options={{
-                headerTitle: 'Navigation',
-                headerTitleAlign: 'center',
-                headerBackTitleVisible: false,
-                headerTransparent: true,
-                headerStyle: {
-                  backgroundColor: '#009933'
-                },
-                headerLeft: () => (
-                  <Ionicons
-                    name="chevron-back"
-                    size={24}
-                    color="#fff"
-                    onPress={() => navigation.goBack()}
-                  />
-                )
-              }}
-            /> */}
 
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                   <Stack.Screen name="+not-found" />
