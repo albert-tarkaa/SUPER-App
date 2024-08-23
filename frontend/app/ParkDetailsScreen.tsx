@@ -2,15 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, Text, LogBox } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
-import {
-  Card,
-  Paragraph,
-  Title,
-  Modal,
-  Portal,
-  Button,
-  Provider
-} from 'react-native-paper';
+import { Card, Paragraph, Title, Modal, Portal, Button, Provider } from 'react-native-paper';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import WeatherDashboard from '@/components/WeatherDashboard';
@@ -53,14 +45,17 @@ const ParkDetailsScreen = () => {
 
   return (
     <Provider>
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
+          <Card.Cover source={{ uri: parkDetails.imageUrl }} style={styles.cover} />
+        </Card>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Park Info Card: Displays main information about the park */}
           <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
-            <Card.Cover
+            {/* <Card.Cover
               source={{ uri: parkDetails.imageUrl }}
               style={styles.cover}
-            />
+            /> */}
             <Card.Content>
               <Title style={styles.title}>{parkDetails.name}</Title>
               <View style={styles.ratingContainer}>
@@ -68,10 +63,7 @@ const ParkDetailsScreen = () => {
                   <Ionicons key={star} name="star" size={16} color="#FFC107" />
                 ))}
                 <Paragraph style={{ color: '#0B1E4B' }}>
-                  {parkDetails.rating}{' '}
-                  <Text style={styles.reviewText}>
-                    {parkDetails.reviewCount} reviews
-                  </Text>
+                  {parkDetails.rating} <Text style={styles.reviewText}>{parkDetails.reviewCount} reviews</Text>
                 </Paragraph>
               </View>
               <Paragraph style={styles.parkAddress}>
@@ -79,27 +71,17 @@ const ParkDetailsScreen = () => {
                 {parkDetails.address} | {parkDetails.postcode}
               </Paragraph>
               <Title style={styles.parkInfoTitle}>Park Info</Title>
-              <Paragraph style={styles.DescriptionText}>
-                {parkDetails.description}
-              </Paragraph>
+              <Paragraph style={styles.DescriptionText}>{parkDetails.description}</Paragraph>
               <View style={styles.infoRow}>
                 <Paragraph>
-                  <Text style={styles.OpenText}>Open</Text>{' '}
-                  <Text style={styles.OpenTime}>
-                    {parkDetails.openingHours}
-                  </Text>
+                  <Text style={styles.OpenText}>Open</Text> <Text style={styles.OpenTime}>{parkDetails.openingHours}</Text>
                 </Paragraph>
               </View>
             </Card.Content>
           </Card>
 
           {/* Weather Dashboard Card: Displays weather and air quality information */}
-          <WeatherDashboard
-            weatherData={parkDetails.weatherData}
-            AQIData={parkDetails.AQIData}
-            error={parkDetails.error}
-            isLoading={parkDetails.isLoading}
-          />
+          <WeatherDashboard weatherData={parkDetails.weatherData} AQIData={parkDetails.AQIData} error={parkDetails.error} isLoading={parkDetails.isLoading} />
 
           {/* Accessibility Card: Lists accessibility features of the park */}
           <Card style={styles.sectionCard}>
@@ -146,18 +128,14 @@ const ParkDetailsScreen = () => {
                   <Card.Cover source={require('@/assets/images/3.png')} />
                   <Card.Content>
                     <Paragraph>Armley Cafe</Paragraph>
-                    <Paragraph style={styles.smallText}>
-                      Stanningley Rd, Armley, Leeds LS12 3LW
-                    </Paragraph>
+                    <Paragraph style={styles.smallText}>Stanningley Rd, Armley, Leeds LS12 3LW</Paragraph>
                   </Card.Content>
                 </Card>
                 <Card style={styles.nearbyCard}>
                   <Card.Cover source={require('@/assets/images/2.png')} />
                   <Card.Content>
                     <Paragraph>Gotts Park</Paragraph>
-                    <Paragraph style={styles.smallText}>
-                      Armley Ridge Rd, Leeds LS12 2QX
-                    </Paragraph>
+                    <Paragraph style={styles.smallText}>Armley Ridge Rd, Leeds LS12 2QX</Paragraph>
                   </Card.Content>
                 </Card>
               </View>
@@ -185,12 +163,7 @@ const ParkDetailsScreen = () => {
           enablePanDownToClose={false}
         >
           <View style={styles.bottomSheetContent}>
-            <CustomButton
-              mode="contained"
-              onPress={handleNavigation}
-              labelStyle={styles.bottomSheetbuttonLabel}
-              style={styles.bottomSheetbutton}
-            >
+            <CustomButton mode="contained" onPress={handleNavigation} labelStyle={styles.bottomSheetbuttonLabel} style={styles.bottomSheetbutton}>
               Get Directions
             </CustomButton>
           </View>
@@ -198,31 +171,16 @@ const ParkDetailsScreen = () => {
 
         {/* Modal: Displays an error message if the user's location is not available */}
         <Portal>
-          <Modal
-            visible={isModalVisible}
-            onDismiss={hideModal}
-            contentContainerStyle={styles.Modalcontainer}
-          >
-            <LottieView
-              source={require('@/assets/images/Location.json')}
-              autoPlay
-              loop
-              style={{ width: 300, height: 300 }}
-            />
+          <Modal visible={isModalVisible} onDismiss={hideModal} contentContainerStyle={styles.Modalcontainer}>
+            <LottieView source={require('@/assets/images/Location.json')} autoPlay loop style={{ width: 300, height: 300 }} />
 
-            <Text style={{ marginBottom: 20, fontSize: 18, padding: 5 }}>
-              Location access is required to proceed.
-            </Text>
-            <Button
-              mode="contained"
-              onPress={hideModal}
-              style={styles.Modalbutton}
-            >
+            <Text style={{ marginBottom: 20, fontSize: 18, padding: 5 }}>Location access is required to proceed.</Text>
+            <Button mode="contained" onPress={hideModal} style={styles.Modalbutton}>
               <Text style={styles.ModalButtonText}>Go back</Text>
             </Button>
           </Modal>
         </Portal>
-      </SafeAreaView>
+      </View>
     </Provider>
   );
 };
@@ -232,8 +190,8 @@ export default ParkDetailsScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F7F8',
-    marginTop: 55
+    backgroundColor: '#F7F7F8'
+    //marginTop: 55
   },
   Modalcontainer: {
     flex: 1,
@@ -376,7 +334,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   cover: {
-    height: 244,
+    height: 324,
     resizeMode: 'cover',
     borderRadius: 0
   },

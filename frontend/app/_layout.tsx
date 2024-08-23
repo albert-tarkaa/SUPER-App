@@ -1,8 +1,4 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider
-} from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
@@ -22,9 +18,7 @@ import * as SecureStore from 'expo-secure-store';
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 if (!publishableKey) {
-  throw new Error(
-    'Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env'
-  );
+  throw new Error('Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env');
 }
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -54,15 +48,10 @@ export default function RootLayout() {
         <Provider store={store}>
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView style={{ flex: 1 }}>
-              <ThemeProvider
-                value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-              >
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                 <Stack>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="OnboardingScreen"
-                    options={{ headerShown: false }}
-                  />
+                  <Stack.Screen name="OnboardingScreen" options={{ headerShown: false }} />
                   <Stack.Screen
                     name="SignInScreen"
                     options={{
@@ -82,14 +71,7 @@ export default function RootLayout() {
                       headerStyle: {
                         backgroundColor: '#009933'
                       },
-                      headerLeft: () => (
-                        <Ionicons
-                          name="chevron-back"
-                          size={24}
-                          color="#fff"
-                          onPress={() => navigation.goBack()}
-                        />
-                      )
+                      headerLeft: () => <Ionicons name="chevron-back" size={24} color="#fff" onPress={() => navigation.goBack()} />
                     }}
                   />
                   <Stack.Screen
@@ -112,21 +94,10 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="ParkDetailsScreen"
                     options={{
-                      headerTitle: 'Park Details',
-                      headerTitleAlign: 'center',
-                      headerBackTitleVisible: false,
+                      headerTitle: '',
+                      headerBackTitleVisible: true,
                       headerTransparent: true,
-                      headerStyle: {
-                        backgroundColor: '#009933'
-                      },
-                      headerLeft: () => (
-                        <Ionicons
-                          name="chevron-back"
-                          size={24}
-                          color="#fff"
-                          onPress={() => navigation.goBack()}
-                        />
-                      )
+                      headerLeft: () => <Ionicons name="chevron-back" size={24} color="#fff" onPress={() => navigation.goBack()} />
                     }}
                   />
                   {/* <Stack.Screen
@@ -150,10 +121,7 @@ export default function RootLayout() {
               }}
             /> */}
 
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{ headerShown: false }}
-                  />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                   <Stack.Screen name="+not-found" />
                 </Stack>
               </ThemeProvider>
