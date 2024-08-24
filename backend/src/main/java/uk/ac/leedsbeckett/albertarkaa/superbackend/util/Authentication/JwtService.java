@@ -18,7 +18,7 @@ import java.util.function.Function;
 // This is a service class that handles the JWT token
 @Service
 public class JwtService {
-    @Value("${application.security.jwt.secretKey}")
+    @Value("${JWT_SECRET_KEY}")
     private String secretKey;
     public String extractUsername(String jwt) {
         return extractClaim(jwt, Claims::getSubject);
