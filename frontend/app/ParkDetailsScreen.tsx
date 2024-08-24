@@ -1,25 +1,26 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
-import { useRoute } from '@react-navigation/native';
-import { Card, Paragraph, Title, Modal, Portal, Button, Provider } from 'react-native-paper';
+import React, { useEffect, useMemo, useRef, useState, Animated } from 'react';
+import { StyleSheet, View, Text, SectionList } from 'react-native';
+import { Card, Paragraph, Title, Modal, Portal, Button, Provider, Avatar } from 'react-native-paper';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import WeatherDashboard from '@/components/WeatherDashboard';
 import Events from '@/components/Events';
 import CustomButton from '@/components/CustomButton';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { getUserLocationSelector, setDestinationLocation } from '@/components/ReduxStore/Slices/locationSlice';
+import { setDestinationLocation } from '@/components/ReduxStore/Slices/locationSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import LottieView from 'lottie-react-native';
+
+const HEADER_HEIGHT = 340;
 
 const ParkDetailsScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const dispatch = useDispatch();
   const [color, setColor] = useState('#009933');
   const { parkDetails, isLoading } = useSelector((state) => state.parkDetails);
-  const { park, weatherData, AQIData } = parkDetails;
+  const { park, weatherData, AQIData } = parkDetails || {};
 
-  const { latitude, longitude } = parkDetails.park;
+  const { latitude, longitude } = park || {};
   const parkDestination = { latitude, longitude };
 
   useEffect(() => {
@@ -48,14 +49,41 @@ const ParkDetailsScreen = () => {
     return <Text>Loading...</Text>;
   }
 
-  return (
-    <Provider>
-      <View style={styles.container}>
-        <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
-          <Card.Cover source={{ uri: park.imageUrl }} style={styles.cover} />
-        </Card>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Park Info Card: Displays main information about the park */}
+  const sections = [
+    {
+      title: 'Park Info',
+      data: [{ type: 'parkInfo' }]
+    },
+    {
+      title: 'Weather',
+      data: [{ type: 'weather' }]
+    },
+    {
+      title: 'Accessibility',
+      data: [{ type: 'accessibility' }]
+    },
+    {
+      title: 'Children',
+      data: [{ type: 'children' }]
+    },
+    {
+      title: 'Notice',
+      data: [{ type: 'notice' }]
+    },
+    {
+      title: 'Nearby Places',
+      data: [{ type: 'nearbyPlaces' }]
+    },
+    {
+      title: 'Events Nearby',
+      data: [{ type: 'events' }]
+    }
+  ];
+
+  const renderItem = ({ item }) => {
+    switch (item.type) {
+      case 'parkInfo':
+        return (
           <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
             <Card.Content>
               <Title style={styles.title}>{park?.name}</Title>
@@ -80,11 +108,11 @@ const ParkDetailsScreen = () => {
               </View>
             </Card.Content>
           </Card>
-
-          {/* Weather Dashboard Card: Displays weather and air quality information */}
-          <WeatherDashboard weatherData={weatherData} AQIData={AQIData || {}} error={park?.error} isLoading={park?.isLoading} />
-
-          {/* Accessibility Card: Lists accessibility features of the park */}
+        );
+      case 'weather':
+        return <WeatherDashboard weatherData={weatherData} AQIData={AQIData || {}} error={park?.error} isLoading={park?.isLoading} />;
+      case 'accessibility':
+        return (
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={styles.parkDetailsTitle}>Accessibility</Title>
@@ -95,8 +123,9 @@ const ParkDetailsScreen = () => {
               ))}
             </Card.Content>
           </Card>
-
-          {/* Children Card: Provides information about the park's suitability for children and pets */}
+        );
+      case 'children':
+        return (
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={styles.parkDetailsTitle}>Children</Title>
@@ -107,8 +136,9 @@ const ParkDetailsScreen = () => {
               ))}
             </Card.Content>
           </Card>
-
-          {/* Notice Card: Displays important notices or rules for the park */}
+        );
+      case 'notice':
+        return (
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={styles.parkDetailsTitle}>Notice</Title>
@@ -119,8 +149,9 @@ const ParkDetailsScreen = () => {
               ))}
             </Card.Content>
           </Card>
-
-          {/* Nearby Places Card: Shows nearby attractions or points of interest */}
+        );
+      case 'nearbyPlaces':
+        return (
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={{ color: '#0B1E4B' }}>Nearby Places</Title>
@@ -142,19 +173,28 @@ const ParkDetailsScreen = () => {
               </View>
             </Card.Content>
           </Card>
-
-          {/* Events Nearby Card: Lists upcoming events near the park */}
+        );
+      case 'events':
+        return (
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={{ color: '#0B1E4B' }}>Events Nearby</Title>
               <Events />
             </Card.Content>
           </Card>
+        );
+      default:
+        return null;
+    }
+  };
 
-          {/* Get Direction Button: Allows users to navigate to a map view */}
-        </ScrollView>
-
-        {/* Bottom Sheet: displays the Map when the user clicks the Get Directions button */}
+  return (
+    <Provider>
+      <View style={styles.container}>
+        <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
+          <Card.Cover source={{ uri: park?.imageUrl }} style={styles.cover} />
+        </Card>
+        <SectionList sections={sections} keyExtractor={(item, index) => item.type + index} renderItem={renderItem} contentContainerStyle={styles.scrollContent} />
         <BottomSheet
           ref={bottomSheetRef}
           index={0}
@@ -162,6 +202,7 @@ const ParkDetailsScreen = () => {
           handleIndicatorStyle={styles.bottomSheetIndicator}
           handleStyle={styles.bottomSheetHandle}
           enablePanDownToClose={false}
+          backgroundStyle={styles.bottomSheetBackground} // Add this line
         >
           <View style={styles.bottomSheetContent}>
             <CustomButton mode="contained" onPress={handleNavigation} labelStyle={styles.bottomSheetbuttonLabel} style={styles.bottomSheetbutton}>
@@ -169,12 +210,9 @@ const ParkDetailsScreen = () => {
             </CustomButton>
           </View>
         </BottomSheet>
-
-        {/* Modal: Displays an error message if the user's location is not available */}
         <Portal>
           <Modal visible={isModalVisible} onDismiss={hideModal} contentContainerStyle={styles.Modalcontainer}>
             <LottieView source={require('@/assets/images/Location.json')} autoPlay loop style={{ width: 300, height: 300 }} />
-
             <Text style={{ marginBottom: 20, fontSize: 18, padding: 5 }}>Location access is required to proceed.</Text>
             <Button mode="contained" onPress={hideModal} style={styles.Modalbutton}>
               <Text style={styles.ModalButtonText}>Go back</Text>
@@ -378,29 +416,35 @@ const styles = StyleSheet.create({
     color: '#0B1E4B',
     marginVertical: 8
   },
-  bottomSheetContent: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 2,
-    backgroundColor: '#fff'
-  },
-  bottomSheetbutton: {
-    width: '100%',
-    marginTop: 1
-  },
-  bottomSheetbuttonLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    padding: 1
-  },
   bottomSheetHandle: {
-    backgroundColor: 'rgba(139, 201, 84, 0.5)',
+    backgroundColor: 'transparent',
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15
   },
   bottomSheetIndicator: {
     backgroundColor: '#E0E0E0',
-    width: 40,
+    width: 0,
     height: 4
+  },
+  bottomSheetBackground: {
+    backgroundColor: ' rgba(255, 255, 255, 0.2);'
+  },
+  bottomSheetContent: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 0,
+    backgroundColor: 'transparent'
+  },
+  bottomSheetbutton: {
+    width: '70%',
+    marginTop: 1,
+    marginHorizontal: 16,
+    marginBottom: 16
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    backgroundColor: '#f4f4f4',
+    padding: 5
   }
 });
