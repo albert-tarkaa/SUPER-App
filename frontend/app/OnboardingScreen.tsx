@@ -11,6 +11,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo';
 import * as Linking from 'expo-linking';
 import PasswordValidation from '@/components/Utils/PasswordValidation';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -129,6 +130,7 @@ const OnboardingScreen = () => {
             value={email}
             onChangeText={setEmail}
           />
+
           <TextInput
             secureTextEntry={!passwordVisible}
             mode="outlined"
@@ -138,7 +140,12 @@ const OnboardingScreen = () => {
               borderWidth: 1,
               borderRadius: 12
             }}
-            right={<TextInput.Icon icon={passwordVisible ? 'eye-off' : 'eye'} onPress={() => setPasswordVisible(!passwordVisible)} />}
+            right={
+              <TextInput.Icon
+                icon={({ size, color }) => <Ionicons name={passwordVisible ? 'eye-off' : 'eye'} size={size} color={color} />}
+                onPress={() => setPasswordVisible(!passwordVisible)}
+              />
+            }
             textColor="#000"
             selectionColor="#000"
             placeholder="Password"

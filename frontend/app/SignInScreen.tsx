@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, Image, Dimensions, TouchableOpacity } from 'react-native';
-import { TextInput, Text, HelperText, Paragraph } from 'react-native-paper';
+import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { TextInput, Text, HelperText } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
@@ -119,7 +120,12 @@ const SignInScreen = () => {
           mode="outlined"
           style={styles.input}
           outlineStyle={styles.inputOutline}
-          right={<TextInput.Icon icon={passwordVisible ? 'eye-off' : 'eye'} onPress={() => setPasswordVisible(!passwordVisible)} />}
+          right={
+            <TextInput.Icon
+              icon={({ size, color }) => <Ionicons name={passwordVisible ? 'eye-off' : 'eye'} size={size} color={color} />}
+              onPress={() => setPasswordVisible(!passwordVisible)}
+            />
+          }
           textColor="#000"
           selectionColor="#000"
           placeholder="Password"

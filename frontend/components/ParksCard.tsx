@@ -1,25 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Text,
-  Card,
-  Title,
-  Paragraph,
-  Icon,
-  ActivityIndicator
-} from 'react-native-paper';
+import { Text, Card, Title, Paragraph, Icon, ActivityIndicator } from 'react-native-paper';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import LottieView from 'lottie-react-native';
 import getAirQualityInfo from './Utils/AQIColorCode';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const apiKey = process.env.EXPO_PUBLIC_AIR_QUALITY_OPEN_DATA_PLATFORM_API_KEY;
+import ApiService from './Utils/ProxyAPICalls';
+import { setParkDetails } from './ReduxStore/Slices/parkDetailsSlice';
+import { useDispatch } from 'react-redux';
 
 const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
   const [AQIData, setAQIData] = useState(null);
   const [color, setColor] = useState('#009933');
   const [AQIReading, setAQIReading] = useState('');
+  const dispatch = useDispatch();
 
   const hexToRgba = (hex, alpha = 1) => {
     let r = 0,
@@ -61,36 +55,19 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
     color // Pass the new hex color here
   );
 
-  const fetchAQIData = async () => {
-    try {
-      const response = await axios.get(
-        `https://api.waqi.info/feed/geo:${park.latitude};${park.longitude}/?token=${apiKey}`
-      );
-      return response.data.data;
-    } catch (error) {
-      if (error.response) {
-        if (error.response.status === 500) {
-          throw new Error('Internal server error');
-        }
-        if (error.response.status === 404) {
-          throw new Error('Resource not found');
-        }
-        throw new Error(error.response.data.message || 'An error occurred');
-      }
-      throw new Error('An error occurred. Please try again later');
-    }
-  };
+  
 
   const {
     data: AQIInfo,
     error: AQIError,
     isLoading: AQILoading
   } = useQuery({
-    queryKey: ['AQIData'],
-    queryFn: fetchAQIData,
-    refetchInterval: 1800000, // 30mins
-    staleTime: 1800000 // 30mins
+    queryKey: ['AQIInfo',park.id],
+    queryFn: () => ApiService.getAirQuality(park.latitude, park.longitude),
+    refetchInterval: 30 * 60 * 1000, // 30mins
+    staleTime: 30 * 60 * 1000 // 30mins
   });
+
 
   useEffect(() => {
     if (AQIInfo) {
@@ -138,7 +115,7 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
 
   const handlePress = () => {
     const parkDetailsWithAQI = {
-      ...park,
+      park,
       weatherData,
       AQIData: {
         aqi: AQIInfo?.aqi,
@@ -146,7 +123,8 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
         reading: AQIReading
       }
     };
-    onPress({ parkDetails: parkDetailsWithAQI });
+    dispatch(setParkDetails(parkDetailsWithAQI));
+    onPress();
   };
 
   const renderSkeletonCards = () => {
@@ -178,12 +156,7 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
         </View>
         <View style={styles.infoContainer}>
           <View style={styles.infoItem}>
-            <LottieView
-              source={modifiedAnimationData}
-              autoPlay
-              loop
-              style={{ width: 35, height: 35 }}
-            />
+            <LottieView source={modifiedAnimationData} autoPlay loop style={{ width: 35, height: 35 }} />
             <Text style={styles.infoText}>{AQIInfo?.aqi}</Text>
           </View>
           {renderWeatherInfo()}

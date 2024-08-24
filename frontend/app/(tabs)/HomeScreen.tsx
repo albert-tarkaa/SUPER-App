@@ -1,44 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { Text, Searchbar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import ParksCard from '@/components/ParksCard';
-import { fetchWeatherData } from '@/components/Utils/api';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import * as Location from 'expo-location';
 import LottieView from 'lottie-react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  getUserLocation,
-  updateUserLocation
-} from '@/components/ReduxStore/Slices/locationSlice';
-
-const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
-
-const fetchparkData = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/parks/list-parks`);
-    return response.data.data;
-  } catch (error) {
-    if (error.response) {
-      if (error.response.status === 500) {
-        throw new Error('Internal server error');
-      }
-      if (error.response.status === 404) {
-        throw new Error('Resource not found');
-      }
-      throw new Error(error.response.data.message || 'An error occurred');
-    }
-    throw new Error('An error occurred. Please try again later');
-  }
-};
+import { getUserLocation, updateUserLocation } from '@/components/ReduxStore/Slices/locationSlice';
+import ApiService from '@/components/Utils/ProxyAPICalls';
+import { debounce } from 'lodash';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredParks, setFilteredParks] = useState([]);
 
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
@@ -89,9 +66,9 @@ const HomeScreen = () => {
     isLoading: isParkLoading
   } = useQuery({
     queryKey: ['parkData'],
-    queryFn: fetchparkData,
-    refetchInterval: 100000, // 24hrs
-    staleTime: 100000 // 24hrs
+    queryFn: ApiService.fetchParkData,
+    refetchInterval: 3 * 60 * 60 * 1000, // 3hrs
+    staleTime: 3 * 60 * 60 * 1000 // 3hrs
   });
 
   const {
@@ -100,57 +77,54 @@ const HomeScreen = () => {
     isLoading: isWeatherLoading
   } = useQuery({
     queryKey: ['weatherData'],
-    queryFn: fetchWeatherData,
-    refetchInterval: 86400000, //24hrs
-    staleTime: 86400000 //24hrs
+    queryFn: ApiService.fetchWeatherData,
+    refetchInterval: 3 * 60 * 60 * 1000, //3hrs
+    staleTime: 3 * 60 * 60 * 1000 //3hrs
   });
 
-  const handleParkPress = (data) => {
-    navigation.navigate('ParkDetailsScreen', { parkDetails: data.parkDetails });
+  const handleParkPress = () => {
+    navigation.navigate('ParkDetailsScreen');
   };
+
+  const debouncedSearch = useCallback(
+    debounce((query) => {
+      if (parkData) {
+        const filtered = parkData.filter((park) => park.name.toLowerCase().includes(query.toLowerCase()));
+        setFilteredParks(filtered);
+      }
+    }, 300),
+    [parkData]
+  );
 
   const onChangeSearch = (query) => {
     setSearchQuery(query);
-    // Handle the search logic here
+    debouncedSearch(query);
   };
 
-  if (isParkLoading || isWeatherLoading)
-    return (
-      <LottieView
-        source={require('@/assets/images/SUPER.json')}
-        autoPlay
-        loop
-      />
-    );
-  if (ParkError) return <Text>An error occurred: {ParkError.message}</Text>;
-  if (weatherError)
-    return <Text>An error occurred: {weatherError.message}</Text>;
+  if (isParkLoading || isWeatherLoading) return <LottieView source={require('@/assets/images/SUPER.json')} autoPlay loop />;
+  if (ParkError) return <Text>An error occurred while fetching park data: {parkError.message}</Text>;
+  if (weatherError) return <Text>An error occurred while fetching weather data: {weatherError.message}</Text>;
+  if (!weatherData) return <Text>Weather data is not available at the moment. Please try again later.</Text>;
+
+  const parksToDisplay = searchQuery ? filteredParks : parkData;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Let's find the best places and events for you to explore{' '}
-        {isAuthenticated && `, ${user?.firstName} 🌴🌻`}
-      </Text>
+      <Text style={styles.title}>Let's find the best places and events for you to explore {isAuthenticated && `, ${user?.firstName} 🌴🌻`}</Text>
 
-      <Searchbar
-        placeholder="Search"
-        onChangeText={onChangeSearch}
-        value={searchQuery}
-        style={styles.searchbar}
-      />
+      <Searchbar placeholder="Search" onChangeText={onChangeSearch} value={searchQuery} style={styles.searchbar} />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.container}>
           <Text style={styles.sectionTitle}>Popular nearby places</Text>
-          {Array.isArray(parkData) && parkData.length > 0 ? (
-            parkData.map((park) => (
+          {Array.isArray(parksToDisplay) && parksToDisplay.length > 0 ? (
+            parksToDisplay.map((park) => (
               <ParksCard
                 key={park.id}
                 park={park}
                 weatherData={weatherData}
                 isLoading={isParkLoading || isWeatherLoading}
-                error={null}
-                onPress={handleParkPress}
+                error={ParkError || weatherError}
+                onPress={() => handleParkPress(park)}
               />
             ))
           ) : (

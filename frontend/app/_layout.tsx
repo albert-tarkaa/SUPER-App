@@ -13,12 +13,11 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { store } from '@/components/ReduxStore';
 import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
-import * as SecureStore from 'expo-secure-store';
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const publishableKey = "pk_test_Y29tcG9zZWQtbXVkZmlzaC02OC5jbGVyay5hY2NvdW50cy5kZXYk";
 
 if (!publishableKey) {
-  throw new Error('Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env');
+  throw new Error('Missing Publishable Key. Please set the publishableKey in your .env');
 }
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.

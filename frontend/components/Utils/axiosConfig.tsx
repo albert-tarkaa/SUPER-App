@@ -27,8 +27,7 @@ axiosInstance.interceptors.response.use(
       try {
         await store.dispatch(refreshToken());
         const newAccessToken = await Keychain.getGenericPassword();
-        axios.defaults.headers.common['Authorization'] =
-          `Bearer ${newAccessToken.password}`;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken.password}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         store.dispatch(logout());

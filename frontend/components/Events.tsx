@@ -1,7 +1,17 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { useEvents } from './Utils/fetchEvents';
 import { formatDateToUK } from './Utils/formatDate';
+import ApiService from './Utils/ProxyAPICalls';
+const { useQuery, UseQueryResult } = require('@tanstack/react-query');
+
+const useEvents = (): typeof UseQueryResult => {
+  return useQuery({
+    queryKey: ['events'],
+    queryFn: ApiService.fetchEvents,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false
+  });
+};
 
 const Events = () => {
   const { data, error, isLoading } = useEvents();
@@ -14,7 +24,7 @@ const Events = () => {
     return <Text>Error fetching events: {error.message}</Text>;
   }
 
-  const calculateDuration = (durationInSeconds) => {
+  const calculateDuration = (durationInSeconds: number) => {
     // Handle cases where the duration is zero or less
     if (durationInSeconds <= 0) {
       return null; // Return null if duration is zero or less
@@ -58,14 +68,11 @@ const Events = () => {
     return result;
   };
 
-  const EventItem = ({ event }) => (
+  const EventItem = ({ event }: { event: Event }) => (
     <View style={styles.eventItem}>
       <Text style={styles.eventTitle}>{event.title}</Text>
       <Text style={styles.eventDetails}>
-        {formatDateToUK(event.start)}{' '}
-        {calculateDuration(event.duration)
-          ? `- ${formatDateToUK(event.end)} `
-          : ''}
+        {formatDateToUK(event.start)} {calculateDuration(event.duration) ? `- ${formatDateToUK(event.end)} ` : ''}
       </Text>
       {event.geo.address.formatted_address ? (
         <Text style={styles.eventDetails}>
@@ -73,11 +80,7 @@ const Events = () => {
           {event.geo.address.postcode}
         </Text>
       ) : null}
-      {calculateDuration(event.duration) ? (
-        <Text style={styles.eventDetails}>
-          Duration: {calculateDuration(event.duration)}
-        </Text>
-      ) : null}
+      {calculateDuration(event.duration) ? <Text style={styles.eventDetails}>Duration: {calculateDuration(event.duration)}</Text> : null}
       <View style={styles.tagsContainer}>
         {event.labels.map((label) => (
           <View key={label} style={styles.tag}>
@@ -90,12 +93,7 @@ const Events = () => {
 
   return (
     <View>
-      <FlatList
-        data={data}
-        renderItem={({ item }) => <EventItem event={item} />}
-        keyExtractor={(item) => item.id}
-        style={styles.container}
-      />
+      <FlatList data={data} renderItem={({ item }) => <EventItem event={item} />} keyExtractor={(item) => item.id} style={styles.container} />
     </View>
   );
 };

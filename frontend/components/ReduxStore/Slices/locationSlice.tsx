@@ -1,22 +1,19 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import * as Location from 'expo-location';
 
-export const getUserLocation = createAsyncThunk(
-  'location/getUserLocation',
-  async (_, { rejectWithValue }) => {
-    try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        return rejectWithValue('Permission to access location was denied');
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      return location.coords;
-    } catch (error) {
-      return rejectWithValue(error.message);
+export const getUserLocation = createAsyncThunk('location/getUserLocation', async (_, { rejectWithValue }) => {
+  try {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      return rejectWithValue('Permission to access location was denied');
     }
+
+    let location = await Location.getCurrentPositionAsync({});
+    return location.coords;
+  } catch (error) {
+    return rejectWithValue(error.message);
   }
-);
+});
 
 const locationSlice = createSlice({
   name: 'location',
@@ -60,23 +57,16 @@ const locationSlice = createSlice({
   }
 });
 
-export const {
-  updateUserLocation,
-  setDestinationLocation,
-  clearDestinationLocation
-} = locationSlice.actions;
+export const { updateUserLocation, setDestinationLocation, clearDestinationLocation } = locationSlice.actions;
 export default locationSlice.reducer;
 
 // Selector to get the destination location
 const selectLocation = (state) => state.location;
 
-export const getDestinationLocation = createSelector(
-  [selectLocation],
-  (location) => ({
-    latitude: location.destinationLatitude,
-    longitude: location.destinationLongitude
-  })
-);
+export const getDestinationLocation = createSelector([selectLocation], (location) => ({
+  latitude: location.destinationLatitude,
+  longitude: location.destinationLongitude
+}));
 
 // Selector to get the user's current location
 export const getUserLocationSelector = (state) => ({

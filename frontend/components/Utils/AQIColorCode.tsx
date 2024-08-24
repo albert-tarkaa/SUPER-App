@@ -3,8 +3,7 @@
 const getAirQualityInfo = (aqi: number) => {
   if (aqi <= 50) return { text: 'Good', color: '#00C853' };
   if (aqi <= 100) return { text: 'Moderate', color: '#FFD600' };
-  if (aqi <= 150)
-    return { text: 'Unhealthy for Sensitive Groups', color: '#FF9100' };
+  if (aqi <= 150) return { text: 'Unhealthy for Sensitive Groups', color: '#FF9100' };
   if (aqi <= 200) return { text: 'Unhealthy', color: '#FF3D00' };
   if (aqi <= 300) return { text: 'Very Unhealthy', color: '#8E24AA' };
   return { text: 'Hazardous', color: '#B71C1C' };

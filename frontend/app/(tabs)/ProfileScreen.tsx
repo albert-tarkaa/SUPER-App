@@ -8,8 +8,6 @@ import { useSelector } from 'react-redux';
 const ProfileScreen = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
-  console.log('user', user);
-
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('(tabs)');

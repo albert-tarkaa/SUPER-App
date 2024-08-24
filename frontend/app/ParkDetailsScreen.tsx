@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View, Text, LogBox } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View, Text } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { Card, Paragraph, Title, Modal, Portal, Button, Provider } from 'react-native-paper';
 import { router } from 'expo-router';
@@ -8,30 +7,32 @@ import { Ionicons } from '@expo/vector-icons';
 import WeatherDashboard from '@/components/WeatherDashboard';
 import Events from '@/components/Events';
 import CustomButton from '@/components/CustomButton';
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { getDestinationLocation, getUserLocation, setDestinationLocation } from '@/components/ReduxStore/Slices/locationSlice';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { getUserLocationSelector, setDestinationLocation } from '@/components/ReduxStore/Slices/locationSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import LottieView from 'lottie-react-native';
 
 const ParkDetailsScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
-  const route = useRoute();
   const dispatch = useDispatch();
-  const { parkDetails } = route.params;
   const [color, setColor] = useState('#009933');
+  const { parkDetails, isLoading } = useSelector((state) => state.parkDetails);
+  const { park, weatherData, AQIData } = parkDetails;
 
-  const { latitude, longitude } = parkDetails;
+  const { latitude, longitude } = parkDetails.park;
   const parkDestination = { latitude, longitude };
 
   useEffect(() => {
-    setColor(parkDetails.AQIData.color);
-  }, [parkDetails.AQIData.color]);
+    if (AQIData && AQIData.color) {
+      setColor(AQIData.color);
+    }
+  }, [AQIData]);
 
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ['13%'], []);
 
   const handleNavigation = async () => {
-    if (latitude === null || longitude === null) {
+    if (!latitude || !longitude) {
       setModalVisible(true);
       return; // Prevent navigation
     }
@@ -43,51 +44,51 @@ const ParkDetailsScreen = () => {
     setModalVisible(false);
   };
 
+  if (isLoading || !parkDetails) {
+    return <Text>Loading...</Text>;
+  }
+
   return (
     <Provider>
       <View style={styles.container}>
         <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
-          <Card.Cover source={{ uri: parkDetails.imageUrl }} style={styles.cover} />
+          <Card.Cover source={{ uri: park.imageUrl }} style={styles.cover} />
         </Card>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Park Info Card: Displays main information about the park */}
           <Card style={{ backgroundColor: '#fff', marginBottom: 8 }}>
-            {/* <Card.Cover
-              source={{ uri: parkDetails.imageUrl }}
-              style={styles.cover}
-            /> */}
             <Card.Content>
-              <Title style={styles.title}>{parkDetails.name}</Title>
+              <Title style={styles.title}>{park?.name}</Title>
               <View style={styles.ratingContainer}>
                 {[1, 2, 3, 4].map((star) => (
                   <Ionicons key={star} name="star" size={16} color="#FFC107" />
                 ))}
                 <Paragraph style={{ color: '#0B1E4B' }}>
-                  {parkDetails.rating} <Text style={styles.reviewText}>{parkDetails.reviewCount} reviews</Text>
+                  {park?.rating} <Text style={styles.reviewText}>{park?.reviewCount} reviews</Text>
                 </Paragraph>
               </View>
               <Paragraph style={styles.parkAddress}>
                 <Ionicons name="location" size={12} color="green" />
-                {parkDetails.address} | {parkDetails.postcode}
+                {park?.address} | {park?.postcode}
               </Paragraph>
               <Title style={styles.parkInfoTitle}>Park Info</Title>
-              <Paragraph style={styles.DescriptionText}>{parkDetails.description}</Paragraph>
+              <Paragraph style={styles.DescriptionText}>{park?.description}</Paragraph>
               <View style={styles.infoRow}>
                 <Paragraph>
-                  <Text style={styles.OpenText}>Open</Text> <Text style={styles.OpenTime}>{parkDetails.openingHours}</Text>
+                  <Text style={styles.OpenText}>Open</Text> <Text style={styles.OpenTime}>{park?.openingHours}</Text>
                 </Paragraph>
               </View>
             </Card.Content>
           </Card>
 
           {/* Weather Dashboard Card: Displays weather and air quality information */}
-          <WeatherDashboard weatherData={parkDetails.weatherData} AQIData={parkDetails.AQIData} error={parkDetails.error} isLoading={parkDetails.isLoading} />
+          <WeatherDashboard weatherData={weatherData} AQIData={AQIData || {}} error={park?.error} isLoading={park?.isLoading} />
 
           {/* Accessibility Card: Lists accessibility features of the park */}
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={styles.parkDetailsTitle}>Accessibility</Title>
-              {parkDetails.accessibility.map((accessibility) => (
+              {park?.accessibility.map((accessibility) => (
                 <Text key={accessibility} style={styles.text}>
                   {accessibility}
                 </Text>
@@ -99,7 +100,7 @@ const ParkDetailsScreen = () => {
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={styles.parkDetailsTitle}>Children</Title>
-              {parkDetails.childrenFeatures.map((children) => (
+              {park?.childrenFeatures.map((children) => (
                 <Text key={children} style={styles.text}>
                   {children}
                 </Text>
@@ -111,7 +112,7 @@ const ParkDetailsScreen = () => {
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={styles.parkDetailsTitle}>Notice</Title>
-              {parkDetails.notices.map((notice) => (
+              {park?.notices.map((notice) => (
                 <Text key={notice} style={styles.text}>
                   {notice}
                 </Text>

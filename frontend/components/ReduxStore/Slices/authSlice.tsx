@@ -4,204 +4,166 @@ import axios from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-export const login = createAsyncThunk(
-  'auth/login',
-  async ({ username, password }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${API_URL}/auth/login/`, {
-        username,
-        password
-      });
+export const login = createAsyncThunk('auth/login', async ({ username, password }, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/login/`, {
+      username,
+      password
+    });
 
-      // Extract authToken and refreshToken
-      const { data } = response.data;
-      // Destructure user data
-      const {
+    // Extract authToken and refreshToken
+    const { data } = response.data;
+    // Destructure user data
+    const { firstName, lastName, dob, gender, role, userId, profileComplete, authToken, refreshToken } = data;
+
+    const credentials = { authToken, refreshToken };
+    const credentialsString = JSON.stringify(credentials);
+    try {
+      await SecureStore.setItemAsync('auth', credentialsString);
+    } catch (error) {
+      console.error('Failed to save to Keychain:', error);
+    }
+
+    // Return user data including tokens
+    return {
+      user: {
+        username,
         firstName,
         lastName,
         dob,
         gender,
         role,
         userId,
-        profileComplete,
-        authToken,
-        refreshToken
-      } = data;
-
-      const credentials = { authToken, refreshToken };
-      const credentialsString = JSON.stringify(credentials);
-      try {
-        await SecureStore.setItemAsync('auth', credentialsString);
-      } catch (error) {
-        console.error('Failed to save to Keychain:', error);
+        profileComplete
       }
-
-      // Return user data including tokens
-      return {
-        user: {
-          username,
-          firstName,
-          lastName,
-          dob,
-          gender,
-          role,
-          userId,
-          profileComplete
-        }
-      };
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error);
-    }
+    };
+  } catch (error) {
+    return rejectWithValue(error.response?.data || error);
   }
-);
+});
 
-export const loginWithGoogle = createAsyncThunk(
-  'auth/loginWithGoogle',
-  async ({ email, firstName, lastName }, { rejectWithValue }) => {
+export const loginWithGoogle = createAsyncThunk('auth/loginWithGoogle', async ({ email, firstName, lastName }, { rejectWithValue }) => {
+  try {
+    // Here you would typically send this data to your backend
+    // to create or update the user account
+    const response = await axios.post(`${API_URL}/auth/googlelogin`, {
+      email,
+      firstName,
+      lastName
+    });
+
+    // Extract authToken and refreshToken
+    const { data } = response.data;
+    // Destructure user data
+    const { user, authToken, refreshToken } = data;
+
+    const { dob, gender, profileComplete, username, role, id } = user;
+
+    const credentials = { authToken, refreshToken };
+    const credentialsString = JSON.stringify(credentials);
     try {
-      // Here you would typically send this data to your backend
-      // to create or update the user account
-      const response = await axios.post(`${API_URL}/auth/googlelogin`, {
-        email,
-        firstName,
-        lastName
-      });
-
-      // Extract authToken and refreshToken
-      const { data } = response.data;
-      // Destructure user data
-      const { user, authToken, refreshToken } = data;
-
-      const { dob, gender, profileComplete, username, role, id } = user;
-
-      const credentials = { authToken, refreshToken };
-      const credentialsString = JSON.stringify(credentials);
-      try {
-        await SecureStore.setItemAsync('auth', credentialsString);
-      } catch (error) {
-        console.error('Failed to save to Keychain:', error);
-      }
-
-      // Return user data
-      return {
-        user: {
-          dob,
-          firstName,
-          gender,
-          lastName,
-          profileComplete,
-          username,
-          role,
-          userId: id
-        }
-      };
+      await SecureStore.setItemAsync('auth', credentialsString);
     } catch (error) {
-      console.error('LoginWithGoogle error:', error);
-      return rejectWithValue(
-        error.response?.data || {
-          message: 'An error occurred during Google login'
-        }
-      );
+      console.error('Failed to save to Keychain:', error);
     }
-  }
-);
 
-export const signup = createAsyncThunk(
-  'auth/signup',
-  async (
-    { username, password, firstName, lastName, dob, gender },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
-        username,
-        password,
+    // Return user data
+    return {
+      user: {
+        dob,
         firstName,
+        gender,
         lastName,
-        ...(dob && { dob }), // Include dob only if it's provided
-        ...(gender && { gender }) // Include gender only if it's provided
-      });
+        profileComplete,
+        username,
+        role,
+        userId: id
+      }
+    };
+  } catch (error) {
+    console.error('LoginWithGoogle error:', error);
+    return rejectWithValue(
+      error.response?.data || {
+        message: 'An error occurred during Google login'
+      }
+    );
+  }
+});
 
-      // Extract authToken and refreshToken
-      const { data } = response.data;
-      // Destructure user data
-      const {
+export const signup = createAsyncThunk('auth/signup', async ({ username, password, firstName, lastName, dob, gender }, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/register`, {
+      username,
+      password,
+      firstName,
+      lastName,
+      ...(dob && { dob }), // Include dob only if it's provided
+      ...(gender && { gender }) // Include gender only if it's provided
+    });
+
+    // Extract authToken and refreshToken
+    const { data } = response.data;
+    // Destructure user data
+    const { firstName: returnedFirstName, lastName: returnedLastName, dob: returnedDob, gender: returnedGender, role, userId, profileComplete, authToken, refreshToken } = data;
+
+    const credentials = { authToken, refreshToken };
+    const credentialsString = JSON.stringify(credentials);
+    try {
+      await SecureStore.setItemAsync('auth', credentialsString);
+    } catch (error) {
+      console.error('Failed to save to Keychain:', error);
+    }
+
+    // Return user data including tokens
+    return {
+      user: {
+        username,
         firstName: returnedFirstName,
         lastName: returnedLastName,
         dob: returnedDob,
         gender: returnedGender,
         role,
         userId,
-        profileComplete,
-        authToken,
-        refreshToken
-      } = data;
-
-      const credentials = { authToken, refreshToken };
-      const credentialsString = JSON.stringify(credentials);
-      try {
-        await SecureStore.setItemAsync('auth', credentialsString);
-      } catch (error) {
-        console.error('Failed to save to Keychain:', error);
+        profileComplete
       }
-
-      // Return user data including tokens
-      return {
-        user: {
-          username,
-          firstName: returnedFirstName,
-          lastName: returnedLastName,
-          dob: returnedDob,
-          gender: returnedGender,
-          role,
-          userId,
-          profileComplete
-        }
-      };
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error);
-    }
+    };
+  } catch (error) {
+    return rejectWithValue(error.response?.data || error);
   }
-);
+});
 
-export const refreshToken = createAsyncThunk(
-  'auth/refreshToken',
-  async (_, { rejectWithValue }) => {
+export const refreshToken = createAsyncThunk('auth/refreshToken', async (_, { rejectWithValue }) => {
+  try {
+    const storedCredentials = await SecureStore.getItemAsync('auth');
+    if (!storedCredentials) {
+      throw new Error('No refresh token found');
+    }
+
+    const { refreshToken } = JSON.parse(storedCredentials);
+
+    const response = await axios.post(`${API_URL}/refresh`, {
+      refreshToken
+    });
+
+    const { authToken: newAuthToken, refreshToken: newRefreshToken } = response.data;
+
+    const newCredentials = {
+      authToken: newAuthToken,
+      refreshToken: newRefreshToken
+    };
+    const newCredentialsString = JSON.stringify(newCredentials);
+
     try {
-      const storedCredentials = await SecureStore.getItemAsync('auth');
-      if (!storedCredentials) {
-        throw new Error('No refresh token found');
-      }
-
-      const { refreshToken } = JSON.parse(storedCredentials);
-
-      const response = await axios.post(`${API_URL}/refresh`, {
-        refreshToken
-      });
-
-      const { authToken: newAuthToken, refreshToken: newRefreshToken } =
-        response.data;
-
-      const newCredentials = {
-        authToken: newAuthToken,
-        refreshToken: newRefreshToken
-      };
-      const newCredentialsString = JSON.stringify(newCredentials);
-
-      try {
-        await SecureStore.setItemAsync('auth', newCredentialsString);
-      } catch (error) {
-        console.error('Failed to save to SecureStore:', error);
-      }
-
-      return response.data;
+      await SecureStore.setItemAsync('auth', newCredentialsString);
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: 'An error occurred' }
-      );
+      console.error('Failed to save to SecureStore:', error);
     }
+
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data || { message: 'An error occurred' });
   }
-);
+});
 
 const authSlice = createSlice({
   name: 'auth',
@@ -216,9 +178,7 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       // Clear Keychain credentials
-      SecureStore.deleteItemAsync('auth').catch((error) =>
-        console.error('Failed to clear SecureStore:', error)
-      );
+      SecureStore.deleteItemAsync('auth').catch((error) => console.error('Failed to clear SecureStore:', error));
     }
   },
   extraReducers: (builder) => {
