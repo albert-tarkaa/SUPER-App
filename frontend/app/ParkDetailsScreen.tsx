@@ -10,8 +10,9 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { setDestinationLocation } from '@/components/ReduxStore/Slices/locationSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import LottieView from 'lottie-react-native';
-
-const HEADER_HEIGHT = 340;
+import ApiService from '@/components/Utils/ProxyAPICalls';
+import { useQuery } from '@tanstack/react-query';
+import NearbyPlacesList from '@/components/NearbyPlacesList';
 
 const ParkDetailsScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -19,9 +20,28 @@ const ParkDetailsScreen = () => {
   const [color, setColor] = useState('#009933');
   const { parkDetails, isLoading } = useSelector((state) => state.parkDetails);
   const { park, weatherData, AQIData } = parkDetails || {};
+  const [PointOfInterest, setPointOfInterest] = useState([]);
 
   const { latitude, longitude } = park || {};
   const parkDestination = { latitude, longitude };
+
+  const {
+    data: poisData,
+    error: poisError,
+    isLoading: isPoisLoading
+  } = useQuery({
+    queryKey: ['poisData', latitude, longitude],
+    queryFn: () => ApiService.fetchPOIs(latitude, longitude),
+    enabled: !!park?.latitude && !!park?.longitude,
+    refetchInterval: 7 * 24 * 60 * 60 * 1000, //1 week
+    staleTime: 7 * 24 * 60 * 60 * 1000 //1 week
+  });
+
+  useEffect(() => {
+    if (poisData) {
+      setPointOfInterest(poisData);
+    }
+  }, [poisData]);
 
   useEffect(() => {
     if (AQIData && AQIData.color) {
@@ -32,15 +52,22 @@ const ParkDetailsScreen = () => {
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ['13%'], []);
 
+  // Convert meters to miles
+  const metersToMiles = (meters) => {
+    return (meters * 0.000621371).toFixed(2); // Convert meters to miles
+  };
+
   const handleNavigation = async () => {
-    console.log('handleNavigation called');
     try {
       if (latitude === null || longitude === null) {
         setModalVisible(true);
         return;
       }
       await dispatch(setDestinationLocation(parkDestination));
-      router.push('/Map');
+      router.push({
+        pathname: '/Map',
+        params: { poisData: JSON.stringify(PointOfInterest) }
+      });
     } catch (error) {
       console.error('Navigation error:', error);
     }
@@ -74,6 +101,10 @@ const ParkDetailsScreen = () => {
     {
       title: 'Notice',
       data: [{ type: 'notice' }]
+    },
+    {
+      title: 'Points of Interest',
+      data: [{ type: 'pois' }]
     },
     {
       title: 'Nearby Places',
@@ -156,29 +187,14 @@ const ParkDetailsScreen = () => {
           </Card>
         );
       case 'nearbyPlaces':
-        return (
+        return poisData ? (
           <Card style={styles.sectionCard}>
             <Card.Content>
               <Title style={{ color: '#0B1E4B' }}>Nearby Places</Title>
-              <View style={styles.nearbyPlaces}>
-                <Card style={styles.nearbyCard}>
-                  <Card.Cover source={require('@/assets/images/3.png')} />
-                  <Card.Content>
-                    <Paragraph>Armley Cafe</Paragraph>
-                    <Paragraph style={styles.smallText}>Stanningley Rd, Armley, Leeds LS12 3LW</Paragraph>
-                  </Card.Content>
-                </Card>
-                <Card style={styles.nearbyCard}>
-                  <Card.Cover source={require('@/assets/images/2.png')} />
-                  <Card.Content>
-                    <Paragraph>Gotts Park</Paragraph>
-                    <Paragraph style={styles.smallText}>Armley Ridge Rd, Leeds LS12 2QX</Paragraph>
-                  </Card.Content>
-                </Card>
-              </View>
+              <NearbyPlacesList data={PointOfInterest} />
             </Card.Content>
           </Card>
-        );
+        ) : null;
       case 'events':
         return (
           <Card style={styles.sectionCard}>

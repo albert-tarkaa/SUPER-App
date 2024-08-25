@@ -107,14 +107,14 @@ const styles = StyleSheet.create({
   },
   eventItem: {
     backgroundColor: '#FFFFFF',
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#D1D5DB'
   },
   eventTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 2
+    marginBottom: 1
   },
   eventDetails: {
     fontSize: 14,

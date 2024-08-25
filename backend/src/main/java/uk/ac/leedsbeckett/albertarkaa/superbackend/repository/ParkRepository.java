@@ -9,9 +9,6 @@ import java.util.Optional;
 
 @Repository // This is a repository class
 public interface ParkRepository extends JpaRepository<ParkModel, Integer> {
-    Optional<ParkModel> findByName(String name); // Find a park by name
     Optional<ParkModel> findByOpeningHours(String openingHours); // Find a park by opening hours
-
     List<ParkModel> findByNameContainingIgnoreCase(String parkName); // Find parks by name
-
 }

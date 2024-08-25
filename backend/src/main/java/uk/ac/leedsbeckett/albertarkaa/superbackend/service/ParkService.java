@@ -14,6 +14,7 @@ import uk.ac.leedsbeckett.albertarkaa.superbackend.util.Authentication.AuthServi
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,6 @@ public class ParkService {
     // This method retrieves parks
     public ControllerResponse<List<ParksResponse>> getParks(String parkName) {
         try {
-
             List<ParkModel> parkModels;
             if (parkName == null || parkName.isBlank()) {
                 parkModels = parkRepository.findAll();
@@ -43,7 +43,7 @@ public class ParkService {
 
             return new ControllerResponse<>(true, "Parks retrieved successfully", parksResponses);
         } catch (Exception e) {
-            Logger.getLogger("Error retrieving parks: " + e.getMessage());
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Error retrieving parks", e);
             return new ControllerResponse<>(false, "Error retrieving parks: " + e.getMessage(), null);
         }
     }
@@ -106,9 +106,10 @@ public class ParkService {
         }
     }
 
-    // This method retrieves parks by name
+    // This method retrieves parks
     private ParksResponse mapToParksResponse(ParkModel parkModel) {
         ParksResponse response = new ParksResponse();
+        // Map existing fields
         response.setId(parkModel.getId());
         response.setName(parkModel.getName());
         response.setImageUrl(parkModel.getImageUrl());
@@ -127,6 +128,7 @@ public class ParkService {
         response.setAccessibility(parkModel.getAccessibility());
         response.setChildrenFeatures(parkModel.getChildrenFeatures());
         response.setNotices(parkModel.getNotices());
+
         return response;
     }
 }

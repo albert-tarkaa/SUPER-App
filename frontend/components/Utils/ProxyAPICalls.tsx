@@ -45,7 +45,7 @@ const ApiService = {
     }
   },
 
-  getAirQuality: async (latitude, longitude) => {
+  getAirQuality: async (latitude: number, longitude: number) => {
     try {
       const response = await axios.get(`${API_URL}/proxy/air-quality`, {
         params: { lat: latitude, lon: longitude }
@@ -108,6 +108,24 @@ const ApiService = {
     }
 
     throw new Error('An error occurred while fetching events');
+  },
+
+  //Points of Interest
+  fetchPOIs: async (latitude: number, longitude: number) => {
+    try {
+      const response = await axios.post(`${API_URL}/proxy/points-of-interest`, null, {
+        params: {
+          latitude,
+          longitude
+        }
+      });
+
+      console.log('POIs:', JSON.stringify(response.data.features, null, 2));
+      return response.data.features;
+    } catch (error) {
+      console.error('Error fetching POIs:', error);
+      throw error;
+    }
   }
 };
 

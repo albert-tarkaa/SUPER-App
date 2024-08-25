@@ -32,11 +32,11 @@ const transportStyles = {
   }
 };
 
-const OpenStreetMapNavigation = () => {
+const OpenStreetMapNavigation = ({ poisData }) => {
   const userLocation = useSelector(getUserLocationSelector);
   const destinationLocation = useSelector(getDestinationLocation);
-
   const [transportMode, setTransportMode] = useState('driving');
+  const [PointOfInterest, setPointOfInterest] = useState([]);
   const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -48,13 +48,32 @@ const OpenStreetMapNavigation = () => {
 
   const snapPoints = useMemo(() => ['20%', '50%', '75%'], []);
 
-   const { route, instructions, totalDistance, totalDuration, error, speakInstruction } = RouteService(userLocation, destinationLocation, transportMode);
+  const { route, instructions, totalDistance, totalDuration, error, speakInstruction } = RouteService(userLocation, destinationLocation, transportMode);
 
   useEffect(() => {
     if (!userLocation.latitude || !userLocation.longitude) {
       setModalVisible(true);
     }
   }, [userLocation]);
+
+  useEffect(() => {
+    if (poisData) {
+      setPointOfInterest(poisData);
+    }
+  }, [poisData]);
+
+  const categorySymbols = {
+    '191': 'atm', // ATM
+    '564': 'coffee', // Cafe
+    '518': 'cart', // Supermarket
+    '601': 'parking', // Parking
+    '583': 'bike' // Bicycle parking
+  };
+
+  const getSymbolForPOI = (poi: POI) => {
+    const categoryId = Object.keys(poi.properties.category_ids)[0];
+    return categorySymbols[categoryId] || 'map-marker';
+  };
 
   const hideModal = () => {
     router.push('(tabs)');
@@ -194,6 +213,21 @@ const OpenStreetMapNavigation = () => {
               <Marker coordinate={userLocation} pinColor="blue" title="Your Location" />
               <Marker coordinate={destinationLocation} pinColor="red" title="Destination" />
               {route && <Polyline coordinates={route} strokeColor={transportStyles[transportMode].strokeColor} strokeWidth={transportStyles[transportMode].strokeWidth} />}
+
+              {/* POI markers with custom symbols */}
+              {poisData &&
+                poisData.map((poi, index) => (
+                  <Marker
+                    key={index}
+                    coordinate={{
+                      latitude: poi.geometry.coordinates[1],
+                      longitude: poi.geometry.coordinates[0]
+                    }}
+                    title={Object.values(poi.properties.category_ids)[0].category_name}
+                  >
+                    <MaterialCommunityIcons name={getSymbolForPOI(poi)} size={24} color="#1e90ff" />
+                  </Marker>
+                ))}
             </MapView>
           )}
           <View style={styles.infoContainer}>

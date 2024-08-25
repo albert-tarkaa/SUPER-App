@@ -32,5 +32,4 @@ public class ParksResponse {
     private List<String> accessibility;
     private List<String> childrenFeatures;
     private List<String> notices;
-
 }

@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-
 public class ParkModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

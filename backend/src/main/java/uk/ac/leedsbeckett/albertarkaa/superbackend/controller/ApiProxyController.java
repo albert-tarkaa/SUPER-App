@@ -22,6 +22,8 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -150,6 +152,43 @@ public class ApiProxyController {
                     System.err.println("Error fetching events: " + e.getMessage());
                     return Mono.just("[]");
                 });
+    }
+
+    @PostMapping("/points-of-interest")
+    @Cacheable(value = "poisCache", key = "#latitude + '-' + #longitude", condition = "#latitude != null && #longitude != null")
+    public Mono<ResponseEntity<String>> getPointofInterest(
+            @RequestParam @NotNull Double latitude,
+            @RequestParam @NotNull Double longitude)
+    {
+        logger.info("Fetching POIs for latitude: {} and longitude: {}", latitude, longitude);
+
+        List<Integer> categories = List.of(191, 564, 518, 601, 583);
+
+        // Create the request body for the POIs API call
+        Map<String, Object> requestBody = Map.of(
+                "request", "pois",
+                "geometry", Map.of(
+                        "geojson", Map.of(
+                                "type", "Point",
+                                "coordinates", List.of(longitude, latitude)
+                        ),
+                        "buffer", 500 // Buffer radius in meters, 500 meters
+                ),
+                "filters", Map.of(
+                        "category_ids", categories
+                )
+        );
+
+        return webClient.post()
+                .uri("https://api.openrouteservice.org/pois")
+                .header(HttpHeaders.AUTHORIZATION, openRouteApiKey)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(ResponseEntity::ok)
+                .timeout(Duration.ofSeconds(10))
+                .onErrorResume(this::handleError);
     }
 
     // This method handles errors that occur during API calls and returns an appropriate response
