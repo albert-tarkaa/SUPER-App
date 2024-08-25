@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
 import { TextInput, Text, HelperText } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '@/components/CustomButton';
@@ -152,7 +152,7 @@ const SignInScreen = () => {
         </CustomButton>
 
         <CustomButton mode="outlined" onPress={onPressGoogle} rippleColor="#f1f1f1" style={styles.button}>
-          Continue with Google
+          <MaterialCommunityIcons name="google" size={20} color="black" /> Continue with Google
         </CustomButton>
 
         <View style={styles.signUpContainer}>
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   button: {
-    marginVertical: 10
+    marginVertical: 15
   },
   logo: {
     width: `${IMAGE_WIDTH_PERCENTAGE}%`,

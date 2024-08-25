@@ -13,6 +13,7 @@ import { Button, Modal, Portal, Provider } from 'react-native-paper';
 import LottieView from 'lottie-react-native';
 import { router } from 'expo-router';
 import { RouteService, transportModes } from './Utils/ProxyAPICalls';
+import LocationErrorScreen from '@/app/LocationErrorScreen';
 
 const transportStyles = {
   driving: {
@@ -51,10 +52,14 @@ const OpenStreetMapNavigation = ({ poisData }) => {
   const { route, instructions, totalDistance, totalDuration, error, speakInstruction } = RouteService(userLocation, destinationLocation, transportMode);
 
   useEffect(() => {
-    if (!userLocation.latitude || !userLocation.longitude) {
-      setModalVisible(true);
+    if (!userLocation || !userLocation.latitude || !userLocation.longitude) {
+      router.push('LocationErrorScreen');
     }
-  }, [userLocation]);
+  }, [userLocation, router]);
+
+  if (!userLocation || !userLocation.latitude || !userLocation.longitude) {
+    return null; // Return null to avoid rendering anything while redirecting
+  }
 
   useEffect(() => {
     if (poisData) {
@@ -191,66 +196,59 @@ const OpenStreetMapNavigation = ({ poisData }) => {
         </View>
       </View>
     );
-  }, [instructions, currentInstructionIndex, isNavigating, transportMode, isAudioEnabled]);
+  }, [isNavigating, TransportModeSelector, endNavigation, startNavigation, instructions, currentInstructionIndex]);
+
+  if (!userLocation || !userLocation.latitude || !userLocation.longitude) {
+    return <LocationErrorScreen />;
+  }
 
   return (
-    <Provider>
-      <View style={styles.container}>
-        <View style={styles.mapContainer}>
-          {userLocation && (
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              provider={PROVIDER_DEFAULT}
-              initialRegion={{
-                latitude: userLocation.latitude,
-                longitude: userLocation.longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421
-              }}
-              showsUserLocation={true}
-            >
-              <Marker coordinate={userLocation} pinColor="blue" title="Your Location" />
-              <Marker coordinate={destinationLocation} pinColor="red" title="Destination" />
-              {route && <Polyline coordinates={route} strokeColor={transportStyles[transportMode].strokeColor} strokeWidth={transportStyles[transportMode].strokeWidth} />}
+    <View style={styles.container}>
+      <View style={styles.mapContainer}>
+        {userLocation && (
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            provider={PROVIDER_DEFAULT}
+            initialRegion={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421
+            }}
+            showsUserLocation={true}
+          >
+            <Marker coordinate={userLocation} pinColor="blue" title="Your Location" />
+            <Marker coordinate={destinationLocation} pinColor="red" title="Destination" />
+            {route && <Polyline coordinates={route} strokeColor={transportStyles[transportMode].strokeColor} strokeWidth={transportStyles[transportMode].strokeWidth} />}
 
-              {/* POI markers with custom symbols */}
-              {poisData &&
-                poisData.map((poi, index) => (
-                  <Marker
-                    key={index}
-                    coordinate={{
-                      latitude: poi.geometry.coordinates[1],
-                      longitude: poi.geometry.coordinates[0]
-                    }}
-                    title={Object.values(poi.properties.category_ids)[0].category_name}
-                  >
-                    <MaterialCommunityIcons name={getSymbolForPOI(poi)} size={24} color="#1e90ff" />
-                  </Marker>
-                ))}
-            </MapView>
-          )}
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoText}>Distance: {(totalDistance / 1000).toFixed(2)} km</Text>
-            <Text style={styles.infoText}>Duration: {(totalDuration / 60).toFixed(0)} min</Text>
-          </View>
-
-          <AudioToggle />
+            {/* POI markers with custom symbols */}
+            {poisData &&
+              poisData.map((poi, index) => (
+                <Marker
+                  key={index}
+                  coordinate={{
+                    latitude: poi.geometry.coordinates[1],
+                    longitude: poi.geometry.coordinates[0]
+                  }}
+                  title={Object.values(poi.properties.category_ids)[0].category_name}
+                >
+                  <MaterialCommunityIcons name={getSymbolForPOI(poi)} size={24} color="#1e90ff" />
+                </Marker>
+              ))}
+          </MapView>
+        )}
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoText}>Distance: {(totalDistance / 1000).toFixed(2)} km</Text>
+          <Text style={styles.infoText}>Duration: {(totalDuration / 60).toFixed(0)} min</Text>
         </View>
-        <BottomSheet ref={bottomSheetRef} index={0} snapPoints={snapPoints} backgroundStyle={styles.bottomSheetBackground} handleIndicatorStyle={styles.bottomSheetHandle}>
-          {renderBottomSheetContent()}
-        </BottomSheet>
+
+        <AudioToggle />
       </View>
-      <Portal>
-        <Modal visible={isModalVisible} onDismiss={hideModal} contentContainerStyle={styles.Modalcontainer}>
-          <LottieView source={require('@/assets/images/Location.json')} autoPlay loop style={{ width: 300, height: 300 }} />
-          <Text style={styles.modalText}>Location access is required to proceed.</Text>
-          <Button mode="contained" onPress={hideModal} style={styles.Modalbutton}>
-            <Text style={styles.ModalButtonText}>Go back</Text>
-          </Button>
-        </Modal>
-      </Portal>
-    </Provider>
+      <BottomSheet ref={bottomSheetRef} index={0} snapPoints={snapPoints} backgroundStyle={styles.bottomSheetBackground} handleIndicatorStyle={styles.bottomSheetHandle}>
+        {renderBottomSheetContent()}
+      </BottomSheet>
+    </View>
   );
 };
 

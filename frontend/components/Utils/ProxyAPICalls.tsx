@@ -119,8 +119,6 @@ const ApiService = {
           longitude
         }
       });
-
-      console.log('POIs:', JSON.stringify(response.data.features, null, 2));
       return response.data.features;
     } catch (error) {
       console.error('Error fetching POIs:', error);

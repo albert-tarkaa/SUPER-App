@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -97,6 +97,17 @@ export default function RootLayout() {
                       headerBackTitleVisible: true,
                       headerTransparent: true,
                       headerLeft: () => <Ionicons name="chevron-back" size={24} color="#fff" onPress={() => navigation.goBack()} />
+                    }}
+                  />
+                  <Stack.Screen
+                    name="LocationErrorScreen"
+                    options={{
+                      headerTitle: '',
+                      headerBackTitleVisible: false,
+                      headerTransparent: true,
+                      headerStyle: {
+                        backgroundColor: '#009933'
+                      }
                     }}
                   />
 
