@@ -44,7 +44,7 @@ The architecture of the app is as follows:
 
 ### Performance Features - These features will directly impact user satisfaction
 
-- Information about amenities near parks and green spaces and in the vicinity (cash machines, cafes, shops, car parks, secure bicycle parking).
+- Information about amenities near parks and green spaces and in the vicinity (cash machines, cafes, shops, car parks, secure bicycle parking). &#9989;
 - Information on walking trails and what users can see along the way.
 - Information about plant and tree species as well as parks and green spaces initiatives e.g. no-mow May.
 - Art in the parks and green spaces - Historical and cultural references.
