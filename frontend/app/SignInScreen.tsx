@@ -65,10 +65,11 @@ const SignInScreen = () => {
       }
     } catch (err) {
       console.error('OAuth error', err);
+      console.error('OAuth error details:', JSON.stringify(err, null, 2));
     } finally {
       setIsLoading(false);
     }
-  }, [dispatch, navigation, startOAuthFlow, user, redirectUrl, getToken]);
+  }, [startOAuthFlow, redirectUrl]);
 
   useEffect(() => {
     const checkAuthAndNavigate = async () => {
@@ -82,13 +83,14 @@ const SignInScreen = () => {
           if (userData) {
             const result = await dispatch(loginWithGoogle(userData));
             try {
+              const result = await dispatch(loginWithGoogle(userData));
               if (loginWithGoogle.fulfilled.match(result)) {
                 navigation.navigate('(tabs)');
               } else {
-                console.error('Failed to update application state');
+                console.error('Failed to update application state:', result.payload);
               }
-            } catch {
-              // Empty catch block
+            } catch (error) {
+              console.error('Error during loginWithGoogle dispatch:', error);
             }
           } else {
             console.log('User is not signed in');

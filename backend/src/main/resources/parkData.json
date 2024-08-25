@@ -1,5 +1,5 @@
 [
- {
+  {
     "name": "Roundhay Park",
     "imageUrl": "https://www.datocms-assets.com/96277/1723834001-roundhay-park.jpeg",
     "rating": 4.7,
@@ -16,63 +16,7 @@
     "updatedAt": "2024-08-12T09:00:00",
     "accessibility": ["Accessible paths", "Disabled parking", "Accessible toilets"],
     "childrenFeatures": ["Playgrounds", "Skateboard park", "Lakeside walks"],
-    "notices": ["No BBQs allowed", "Please keep dogs under control"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "The Lakeside Café",
-          "distance": "0.2 miles",
-          "description": "Café overlooking Waterloo Lake"
-        },
-        {
-          "name": "The Mansion",
-          "distance": "0.5 miles",
-          "description": "Café in the historic Mansion building"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Oakwood Farmers Market",
-          "distance": "0.7 miles",
-          "description": "Monthly market with local produce"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Tesco Express",
-          "distance": "0.8 miles",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "Mansion Car Park",
-          "distance": "On-site",
-          "capacity": 200,
-          "feeRequired": true
-        },
-        {
-          "name": "Princes Avenue Car Park",
-          "distance": "On-site",
-          "capacity": 100,
-          "feeRequired": false
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Near Lakeside Café",
-          "distance": "0.2 miles",
-          "capacity": 20,
-          "secure": true
-        },
-        {
-          "location": "Mansion entrance",
-          "distance": "0.5 miles",
-          "capacity": 15,
-          "secure": true
-        }
-      ]
-    }
+    "notices": ["No BBQs allowed", "Please keep dogs under control"]
   },
   {
     "name": "Temple Newsam",
@@ -91,46 +35,7 @@
     "updatedAt": "2024-08-12T10:15:00",
     "accessibility": ["Wheelchair accessible areas", "Mobility scooters available"],
     "childrenFeatures": ["Farm animals", "Adventure playground", "Go Ape treetop adventure"],
-    "notices": ["Farm has separate admission fee", "Mansion tours available"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Temple Newsam Tea Rooms",
-          "distance": "On-site",
-          "description": "Traditional tea rooms in the Stable Courtyard"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Gift Shop",
-          "distance": "On-site",
-          "description": "Located in the Stable Courtyard"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Co-op Food",
-          "distance": "1.2 miles",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "Main Car Park",
-          "distance": "On-site",
-          "capacity": 300,
-          "feeRequired": true
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Near Stable Courtyard",
-          "distance": "On-site",
-          "capacity": 30,
-          "secure": true
-        }
-      ]
-    }
+    "notices": ["Farm has separate admission fee", "Mansion tours available"]
   },
   {
     "name": "Golden Acre Park",
@@ -149,46 +54,7 @@
     "updatedAt": "2024-08-12T11:30:00",
     "accessibility": ["Accessible paths", "Disabled toilets"],
     "childrenFeatures": ["Wildfowl lake", "Demonstration gardens"],
-    "notices": ["No cycling allowed", "Dogs must be kept on leads"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Golden Acre Park Café",
-          "distance": "On-site",
-          "description": "Café with outdoor seating area"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Adel Village Stores",
-          "distance": "1.5 miles",
-          "description": "Local convenience store"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Tesco Express",
-          "distance": "2 miles",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "Main Car Park",
-          "distance": "On-site",
-          "capacity": 150,
-          "feeRequired": false
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Near café",
-          "distance": "On-site",
-          "capacity": 20,
-          "secure": true
-        }
-      ]
-    }
+    "notices": ["No cycling allowed", "Dogs must be kept on leads"]
   },
   {
     "name": "Kirkstall Abbey Park",
@@ -207,46 +73,7 @@
     "updatedAt": "2024-08-12T12:45:00",
     "accessibility": ["Some accessible paths", "Accessible visitor center"],
     "childrenFeatures": ["Abbey ruins exploration", "River walks", "Visitor center activities"],
-    "notices": ["Abbey may have separate opening times", "Be careful near the river"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Abbey House Museum Café",
-          "distance": "0.1 miles",
-          "description": "Café in the museum across the road from the abbey"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Kirkstall Bridge Shopping Park",
-          "distance": "0.5 miles",
-          "description": "Retail park with various stores"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Morrisons",
-          "distance": "0.6 miles",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "Abbey House Museum Car Park",
-          "distance": "0.1 miles",
-          "capacity": 50,
-          "feeRequired": true
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Near visitor center",
-          "distance": "On-site",
-          "capacity": 10,
-          "secure": true
-        }
-      ]
-    }
+    "notices": ["Abbey may have separate opening times", "Be careful near the river"]
   },
   {
     "name": "Woodhouse Moor",
@@ -265,46 +92,7 @@
     "updatedAt": "2024-08-12T14:00:00",
     "accessibility": ["Flat terrain", "Paved paths"],
     "childrenFeatures": ["Playground", "Skate park", "Tennis courts"],
-    "notices": ["No barbecues on the grass", "Keep dogs under control"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Hyde Park Book Club",
-          "distance": "0.2 miles",
-          "description": "Café and cultural space"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Co-op Food",
-          "distance": "0.3 miles",
-          "description": "Convenience store"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Sainsbury's Local",
-          "distance": "0.4 miles",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "On-street parking",
-          "distance": "Surrounding streets",
-          "capacity": "Limited",
-          "feeRequired": true
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Various locations around the park",
-          "distance": "On-site",
-          "capacity": 40,
-          "secure": false
-        }
-      ]
-    }
+    "notices": ["No barbecues on the grass", "Keep dogs under control"]
   },
   {
     "name": "Meanwood Park",
@@ -323,46 +111,7 @@
     "updatedAt": "2024-08-12T15:15:00",
     "accessibility": ["Some accessible paths", "Steep areas present"],
     "childrenFeatures": ["Natural play areas", "Stream exploration", "Wildlife spotting"],
-    "notices": ["Be prepared for muddy paths", "Respect wildlife habitats"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Meanwood Valley Urban Farm Café",
-          "distance": "0.3 miles",
-          "description": "Café in the nearby urban farm"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Waitrose",
-          "distance": "0.7 miles",
-          "description": "Supermarket"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Meanwood Shopping Centre",
-          "distance": "0.8 miles",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "Green Road Car Park",
-          "distance": "On-site",
-          "capacity": 30,
-          "feeRequired": false
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Park entrance",
-          "distance": "On-site",
-          "capacity": 15,
-          "secure": true
-        }
-      ]
-    }
+    "notices": ["Be prepared for muddy paths", "Respect wildlife habitats"]
   },
   {
     "name": "Chevin Forest Park",
@@ -381,52 +130,7 @@
     "updatedAt": "2024-08-12T16:30:00",
     "accessibility": ["Some accessible paths", "Steep terrain in places"],
     "childrenFeatures": ["Natural play areas", "Orienteering courses"],
-    "notices": ["Take care on cliff edges", "Keep dogs under control near livestock"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Cheerful Chilli",
-          "distance": "0.5 miles",
-          "description": "Vegetarian café with panoramic views"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Otley Town Centre",
-          "distance": "1.5 miles",
-          "description": "Various shops and amenities"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Otley Town Centre",
-          "distance": "1.5 miles",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "East Chevin Quarry Car Park",
-          "distance": "On-site",
-          "capacity": 50,
-          "feeRequired": false
-        },
-        {
-          "name": "Surprise View Car Park",
-          "distance": "On-site",
-          "capacity": 30,
-          "feeRequired": false
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "White House Car Park",
-          "distance": "On-site",
-          "capacity": 10,
-          "secure": false
-        }
-      ]
-    }
+    "notices": ["Take care on cliff edges", "Keep dogs under control near livestock"]
   },
   {
     "name": "Middleton Park",
@@ -445,46 +149,7 @@
     "updatedAt": "2024-08-12T17:45:00",
     "accessibility": ["Some accessible paths", "Visitor center with facilities"],
     "childrenFeatures": ["Playground", "Mountain bike trails", "Fishing lake"],
-    "notices": ["No swimming in the lakes", "Beware of steep drops in wooded areas"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Middleton Park Café",
-          "distance": "On-site",
-          "description": "Café in the visitor center"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Middleton District Centre",
-          "distance": "0.8 miles",
-          "description": "Various local shops and amenities"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Asda Middleton",
-          "distance": "1 mile",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "Visitor Center Car Park",
-          "distance": "On-site",
-          "capacity": 80,
-          "feeRequired": false
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Near visitor center",
-          "distance": "On-site",
-          "capacity": 20,
-          "secure": true
-        }
-      ]
-    }
+    "notices": ["No swimming in the lakes", "Beware of steep drops in wooded areas"]
   },
   {
     "name": "Horsforth Hall Park",
@@ -503,46 +168,7 @@
     "updatedAt": "2024-08-12T19:00:00",
     "accessibility": ["Mostly flat terrain", "Accessible toilets"],
     "childrenFeatures": ["Playground", "Skate park", "Tennis courts"],
-    "notices": ["No ball games in the formal gardens", "Please use litter bins provided"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Hall Park Café",
-          "distance": "On-site",
-          "description": "Small café in the park"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Horsforth Town Street",
-          "distance": "0.5 miles",
-          "description": "Various local shops and amenities"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Santander",
-          "distance": "0.6 miles",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "Hall Park Car Park",
-          "distance": "On-site",
-          "capacity": 40,
-          "feeRequired": false
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Near main entrance",
-          "distance": "On-site",
-          "capacity": 15,
-          "secure": true
-        }
-      ]
-    }
+    "notices": ["No ball games in the formal gardens", "Please use litter bins provided"]
   },
   {
     "name": "Bramley Fall Park",
@@ -561,45 +187,6 @@
     "updatedAt": "2024-08-12T20:15:00",
     "accessibility": ["Some challenging terrain", "Viewpoints accessible"],
     "childrenFeatures": ["Natural play areas", "Rock climbing (with supervision)"],
-    "notices": ["Take care on uneven ground", "No unauthorized use of quarry areas"],
-    "nearbyAmenities": {
-      "cafes": [
-        {
-          "name": "Bramley Community Centre Café",
-          "distance": "0.7 miles",
-          "description": "Small community café"
-        }
-      ],
-      "shops": [
-        {
-          "name": "Bramley Shopping Centre",
-          "distance": "1 mile",
-          "description": "Various shops and amenities"
-        }
-      ],
-      "cashMachines": [
-        {
-          "location": "Tesco Express",
-          "distance": "1 mile",
-          "feeRequired": false
-        }
-      ],
-      "carParks": [
-        {
-          "name": "On-street parking",
-          "distance": "Surrounding streets",
-          "capacity": "Limited",
-          "feeRequired": false
-        }
-      ],
-      "bicycleParking": [
-        {
-          "location": "Park entrance",
-          "distance": "On-site",
-          "capacity": 8,
-          "secure": false
-        }
-      ]
-    }
+    "notices": ["Take care on uneven ground", "No unauthorized use of quarry areas"]
   }
 ]

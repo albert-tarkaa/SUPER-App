@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 
 //Replace this with your backend API URL
-const API_URL = 'https://3b0a-86-187-235-184.ngrok-free.app/api/v1';
+export const API_URL = 'https://3b0a-86-187-235-184.ngrok-free.app/api/v1';
 
 const handleApiError = (error) => {
   if (error.response) {

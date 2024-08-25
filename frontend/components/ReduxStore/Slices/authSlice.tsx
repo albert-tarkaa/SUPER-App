@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
-
-const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+import { API_URL } from '@/components/Utils/ProxyAPICalls';
 
 export const login = createAsyncThunk('auth/login', async ({ username, password }, { rejectWithValue }) => {
   try {
@@ -205,7 +204,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = true;
         state.error = null;
-        state.user = action.payload.user;
+        state.user = action.payload?.user;
       })
       .addCase(loginWithGoogle.rejected, (state, action) => {
         state.isLoading = false;
