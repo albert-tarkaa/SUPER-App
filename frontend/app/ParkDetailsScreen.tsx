@@ -33,12 +33,17 @@ const ParkDetailsScreen = () => {
   const snapPoints = useMemo(() => ['13%'], []);
 
   const handleNavigation = async () => {
-    if (!latitude || !longitude) {
-      setModalVisible(true);
-      return; // Prevent navigation
+    console.log('handleNavigation called');
+    try {
+      if (latitude === null || longitude === null) {
+        setModalVisible(true);
+        return;
+      }
+      await dispatch(setDestinationLocation(parkDestination));
+      router.push('/Map');
+    } catch (error) {
+      console.error('Navigation error:', error);
     }
-    await dispatch(setDestinationLocation(parkDestination));
-    router.push('/Map');
   };
 
   const hideModal = () => {
@@ -202,7 +207,7 @@ const ParkDetailsScreen = () => {
           handleIndicatorStyle={styles.bottomSheetIndicator}
           handleStyle={styles.bottomSheetHandle}
           enablePanDownToClose={false}
-          backgroundStyle={styles.bottomSheetBackground} // Add this line
+          backgroundStyle={styles.bottomSheetBackground}
         >
           <View style={styles.bottomSheetContent}>
             <CustomButton mode="contained" onPress={handleNavigation} labelStyle={styles.bottomSheetbuttonLabel} style={styles.bottomSheetbutton}>
