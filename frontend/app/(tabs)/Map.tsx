@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import OpenStreetMapNavigation from '@/components/OpenStreetMapNavigation';
+import OpenStreetMapNavigation from '@/components/Utils/OpenStreetMapNavigation';
 import { getUserLocationSelector } from '@/components/ReduxStore/Slices/locationSlice';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSelector } from 'react-redux';

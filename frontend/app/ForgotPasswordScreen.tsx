@@ -10,9 +10,7 @@ const ForgotPasswordScreen = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>Forgot your account’s password? </Text>
-        <Text style={styles.subtitle}>
-          Enter your email address and we’ll send you a recovery link.
-        </Text>
+        <Text style={styles.subtitle}>Enter your email address and we’ll send you a recovery link.</Text>
         <TextInput
           mode="outlined"
           style={styles.input}
@@ -26,12 +24,7 @@ const ForgotPasswordScreen = () => {
           placeholder="Email Address"
         />
 
-        <Button
-          mode="contained"
-          style={styles.createAccountButton}
-          labelStyle={styles.buttonLabel}
-          onPress={() => navigation.navigate('ResetPasswordScreen')}
-        >
+        <Button mode="contained" style={styles.createAccountButton} labelStyle={styles.buttonLabel} onPress={() => navigation.navigate('ResetPasswordScreen')}>
           Send Recovery Link
         </Button>
       </View>

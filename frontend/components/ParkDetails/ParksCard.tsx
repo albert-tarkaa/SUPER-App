@@ -3,13 +3,13 @@ import { Text, Card, Title, Paragraph, Icon, ActivityIndicator } from 'react-nat
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import LottieView from 'lottie-react-native';
-import getAirQualityInfo from './Utils/AQIColorCode';
+import getAirQualityInfo from '../Utils/AQIColorCode';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ApiService from './Utils/ProxyAPICalls';
-import { setParkDetails } from './ReduxStore/Slices/parkDetailsSlice';
+import ApiService from '../Utils/ProxyAPICalls';
+import { setParkDetails } from '../ReduxStore/Slices/parkDetailsSlice';
 import { useDispatch } from 'react-redux';
 
-const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
+const ParksCard = ({ isLoading, error, onPress, park }) => {
   const [AQIData, setAQIData] = useState(null);
   const [color, setColor] = useState('#009933');
   const [AQIReading, setAQIReading] = useState('');
@@ -55,19 +55,27 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
     color // Pass the new hex color here
   );
 
-  
-
   const {
     data: AQIInfo,
     error: AQIError,
     isLoading: AQILoading
   } = useQuery({
-    queryKey: ['AQIInfo',park.id],
+    queryKey: ['AQIInfo', park.id],
     queryFn: () => ApiService.getAirQuality(park.latitude, park.longitude),
     refetchInterval: 30 * 60 * 1000, // 30mins
     staleTime: 30 * 60 * 1000 // 30mins
   });
 
+  const {
+    data: weatherData,
+    error: weatherError,
+    isLoading: isWeatherLoading
+  } = useQuery({
+    queryKey: ['weatherData', park.id],
+    queryFn: () => ApiService.fetchWeatherData(park.latitude, park.longitude),
+    refetchInterval: 3 * 60 * 60 * 1000, //3hrs
+    staleTime: 3 * 60 * 60 * 1000 //3hrs
+  });
 
   useEffect(() => {
     if (AQIInfo) {
@@ -88,9 +96,9 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
     }
 
     if (weatherData) {
-      const temperature = Math.round(weatherData.main.temp - 273.15); // Convert from Kelvin to Celsius
-      const windSpeed = weatherData.wind.speed;
-      const humidity = weatherData.main.humidity;
+      const temperature = Math.round(weatherData.current.temp_c); // Temperature in Celsius
+      const windSpeed = weatherData.current.wind_kph; // Wind speed in kph
+      const uvIndex = weatherData.current.uv; // UV Index
 
       return (
         <>
@@ -100,11 +108,11 @@ const ParksCard = ({ weatherData, isLoading, error, onPress, park }) => {
           </View>
           <View style={styles.infoItem}>
             <Icon source="weather-windy" size={16} color="#3498DB" />
-            <Text style={styles.infoText}>{windSpeed}m/h</Text>
+            <Text style={styles.infoText}>{windSpeed} kph</Text>
           </View>
           <View style={styles.infoItem}>
-            <Icon source="water-percent" size={16} color="#3498DB" />
-            <Text style={styles.infoText}>{humidity}%</Text>
+            <Icon source="weather-sunny" size={16} color="#FFD700" />
+            <Text style={styles.infoText}>UV: {uvIndex}</Text>
           </View>
         </>
       );

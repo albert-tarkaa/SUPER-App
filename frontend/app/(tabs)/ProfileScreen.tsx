@@ -1,8 +1,8 @@
-import CustomAvatar from '@/components/CustomAvatar';
+import CustomAvatar from '@/components/Utils/CustomAvatar';
 import { router } from 'expo-router';
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Avatar, Card, Title, Paragraph, List } from 'react-native-paper';
+import { Card, Title, Paragraph, List } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 
 const ProfileScreen = () => {

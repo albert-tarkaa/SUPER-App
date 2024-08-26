@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { formatDateToUK } from './Utils/formatDate';
-import ApiService from './Utils/ProxyAPICalls';
+import { formatDateToUK } from '../Utils/formatDate';
+import ApiService from '../Utils/ProxyAPICalls';
 const { useQuery, UseQueryResult } = require('@tanstack/react-query');
 
 const useEvents = (): typeof UseQueryResult => {
@@ -122,7 +122,8 @@ const styles = StyleSheet.create({
   },
   tagsContainer: {
     flexDirection: 'row',
-    marginTop: 8
+    marginTop: 8,
+    flexWrap: 'wrap'
   },
   tag: {
     flexDirection: 'row',
@@ -132,7 +133,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 5,
     borderRadius: 16,
-    marginRight: 8
+    marginRight: 8,
+    marginBottom: 8
   },
   tagText: {
     fontSize: 12,

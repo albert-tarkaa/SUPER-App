@@ -4,7 +4,7 @@ import { TextInput, Text, HelperText } from 'react-native-paper';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-import CustomButton from '@/components/CustomButton';
+import CustomButton from '@/components/Utils/CustomButton';
 import { login, loginWithGoogle } from '@/components/ReduxStore/Slices/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';

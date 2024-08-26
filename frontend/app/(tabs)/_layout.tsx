@@ -4,7 +4,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { TabBarIcon } from '@/components/TabBarIcon';
+import { TabBarIcon } from '@/components/Utils/TabBarIcon';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();

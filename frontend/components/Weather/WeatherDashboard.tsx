@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Card } from 'react-native-paper';
+import WeeklyForecast from './WeeklyForecast';
 
 const primaryColor = '#007A33'; // Darker green for better contrast
 const backgroundColor = '#FFFFFF'; // White background
@@ -24,32 +25,37 @@ const WeatherApp = ({ weatherData, AQIData, error, isLoading }) => {
   }
 
   if (weatherData) {
-    const iconCode = weatherData.weather[0].icon;
-    const weatherIconUrl = `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    const weatherIconUrl = weatherData.current.condition.icon;
 
-    // Convert temperature from Kelvin to Celsius
-    const tempCelsius = Math.round(weatherData.main.temp - 273.15);
-    const tempMaxCelsius = Math.round(weatherData.main.temp_max - 273.15);
-    const tempMinCelsius = Math.round(weatherData.main.temp_min - 273.15);
-    const tempFeelCelsius = Math.round(weatherData.main.feels_like - 273.15);
-    // Extract weather description
-    const description = weatherData.weather[0].description;
+    const tempCelsius = Math.round(weatherData.current.temp_c);
+    const tempMaxCelsius = Math.round(weatherData.forecast.forecastday[0].day.maxtemp_c);
+    const tempMinCelsius = Math.round(weatherData.forecast.forecastday[0].day.mintemp_c);
+    const tempFeelCelsius = Math.round(weatherData.current.feelslike_c);
+    const description = weatherData.current.condition.text;
+    const windSpeedmph = Math.round(weatherData.current.wind_mph);
+    const pressure = weatherData.current.pressure_mb;
+    const humidity = weatherData.current.humidity;
+    const uvIndex = weatherData.current.uv;
+    const visibility = weatherData.current.vis_miles;
 
-    // Convert wind speed from m/s to mph
-    const windSpeedMph = Math.round(weatherData.wind.speed * 2.23694);
-
-    // Pressure in hPa (default)
-    const pressure = weatherData.main.pressure;
+    // Prepare data for WeeklyForecast
+    const forecastData = weatherData.forecast.forecastday.map((day) => ({
+      time: day.date,
+      temp_c: day.day.avgtemp_c,
+      condition: {
+        icon: day.day.condition.icon,
+        text: day.day.condition.text
+      }
+    }));
 
     return (
       <Card style={styles.container}>
-        <Image
-          source={{ uri: weatherIconUrl }}
-          style={styles.temperatureIcon}
-        />
-        <View style={styles.temperatureContainer}>
-          <View style={styles.temperatureReadingContainer}>
+        <View style={styles.temperatureReadingContainer}>
+          <View style={styles.FeelRow}>
+            <Image source={{ uri: `https:${weatherIconUrl}` }} style={styles.temperatureIcon} />
             <Text style={styles.temperature}>{tempCelsius}°C </Text>
+          </View>
+          <View style={styles.detailsRow}>
             <Text style={styles.realFeel}>
               Feels like {tempFeelCelsius}°C{'\n'}
               {description.charAt(0).toUpperCase() + description.slice(1)}
@@ -69,49 +75,32 @@ const WeatherApp = ({ weatherData, AQIData, error, isLoading }) => {
             </View>
             <View style={styles.detailBox}>
               <Text style={styles.detailTitle}>Wind</Text>
-              <Text style={styles.detailValue}>{windSpeedMph} mph</Text>
+              <Text style={styles.detailValue}>{windSpeedmph} mph</Text>
             </View>
           </View>
           <View style={styles.detailsRow}>
             <View style={styles.detailBox}>
               <Text style={styles.detailTitle}>Humidity</Text>
-              <Text style={styles.detailValue}>
-                {weatherData.main.humidity}%
-              </Text>
+              <Text style={styles.detailValue}>{humidity}%</Text>
             </View>
             <View style={styles.detailBox}>
               <Text style={styles.detailTitle}>Pressure</Text>
-              <Text style={styles.detailValue}>{pressure}hpa</Text>
+              <Text style={styles.detailValue}>{pressure} hpa</Text>
+            </View>
+          </View>
+          <View style={styles.detailsRow}>
+            <View style={styles.detailBox}>
+              <Text style={styles.detailTitle}>UV Index</Text>
+              <Text style={styles.detailValue}>{uvIndex}</Text>
+            </View>
+            <View style={styles.detailBox}>
+              <Text style={styles.detailTitle}>Pressure</Text>
+              <Text style={styles.detailValue}>{visibility} miles</Text>
             </View>
           </View>
         </View>
-        <LineChart
-          data={{
-            labels: ['Now', '22:00', '23:00', '00:00', '01:00'],
-            datasets: [{ data: [10, 9, 8, 6, 6] }]
-          }}
-          width={width - 40}
-          height={150}
-          chartConfig={{
-            backgroundColor: 'transparent',
-            backgroundGradientFrom: backgroundColor,
-            backgroundGradientTo: backgroundColor,
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(0, 122, 51, ${opacity})`, // Using primaryColor
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Black labels
-            style: { borderRadius: 16 },
-            propsForDots: {
-              r: '6',
-              strokeWidth: '2',
-              stroke: primaryColor
-            }
-          }}
-          bezier
-          style={{
-            marginVertical: 8,
-            borderRadius: 16
-          }}
-        />
+
+        <WeeklyForecast forecast={forecastData} />
       </Card>
     );
   }
@@ -148,8 +137,8 @@ const styles = StyleSheet.create({
     marginBottom: 5
   },
   temperatureIcon: {
-    width: 60,
-    height: 50
+    width: 64,
+    height: 64
   },
   temperature: {
     fontSize: 30,
@@ -163,7 +152,7 @@ const styles = StyleSheet.create({
     fontWeight: '500'
   },
   detailsContainer: {
-    backgroundColor: '#E6F3E8', // Light green background
+    backgroundColor: '#E6F3E8',
     borderRadius: 15,
     padding: 10,
     marginBottom: 20
@@ -182,8 +171,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10
   },
+  FeelRow: {
+    flexDirection: 'column',
+    justifyContent: 'space-around'
+  },
   detailBox: {
-    backgroundColor: '#C8E6C9', // Slightly darker green for detail boxes
+    backgroundColor: '#C8E6C9',
     borderRadius: 10,
     padding: 10,
     width: '48%',

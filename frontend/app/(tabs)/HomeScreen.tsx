@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { Text, Searchbar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import ParksCard from '@/components/ParksCard';
+import ParksCard from '@/components/ParkDetails/ParksCard';
 import { useQuery } from '@tanstack/react-query';
 import * as Location from 'expo-location';
 import LottieView from 'lottie-react-native';
@@ -19,6 +19,7 @@ const HomeScreen = () => {
 
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { weatherData } = useSelector((state) => state.parkDetails);
 
   useEffect(() => {
     let watchId = null;
@@ -71,17 +72,6 @@ const HomeScreen = () => {
     staleTime: 3 * 60 * 60 * 1000 // 3hrs
   });
 
-  const {
-    data: weatherData,
-    error: weatherError,
-    isLoading: isWeatherLoading
-  } = useQuery({
-    queryKey: ['weatherData'],
-    queryFn: ApiService.fetchWeatherData,
-    refetchInterval: 3 * 60 * 60 * 1000, //3hrs
-    staleTime: 3 * 60 * 60 * 1000 //3hrs
-  });
-
   const handleParkPress = () => {
     navigation.navigate('ParkDetailsScreen');
   };
@@ -101,10 +91,9 @@ const HomeScreen = () => {
     debouncedSearch(query);
   };
 
-  if (isParkLoading || isWeatherLoading) return <LottieView source={require('@/assets/images/SUPER.json')} autoPlay loop />;
+  if (isParkLoading) return <LottieView source={require('@/assets/images/SUPER.json')} autoPlay loop />;
   if (ParkError) return <Text>An error occurred while fetching park data: {parkError.message}</Text>;
-  if (weatherError) return <Text>An error occurred while fetching weather data: {weatherError.message}</Text>;
-  if (!weatherData) return <Text>Weather data is not available at the moment. Please try again later.</Text>;
+  // if (!weatherData) return <Text>Weather data is not available at the moment. Please try again later.</Text>;
 
   const parksToDisplay = searchQuery ? filteredParks : parkData;
 
@@ -117,16 +106,7 @@ const HomeScreen = () => {
         <View style={styles.container}>
           <Text style={styles.sectionTitle}>Popular nearby places</Text>
           {Array.isArray(parksToDisplay) && parksToDisplay.length > 0 ? (
-            parksToDisplay.map((park) => (
-              <ParksCard
-                key={park.id}
-                park={park}
-                weatherData={weatherData}
-                isLoading={isParkLoading || isWeatherLoading}
-                error={ParkError || weatherError}
-                onPress={() => handleParkPress(park)}
-              />
-            ))
+            parksToDisplay.map((park) => <ParksCard key={park.id} park={park} isLoading={isParkLoading} error={ParkError} onPress={() => handleParkPress(park)} />)
           ) : (
             <Text>No parks found</Text>
           )}

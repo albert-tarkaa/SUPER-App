@@ -35,13 +35,14 @@ const ApiService = {
     }
   },
 
-  fetchWeatherData: async () => {
+  fetchWeatherData: async (latitude: number, longitude: number) => {
     try {
-      const response = await axios.get(`${API_URL}/proxy/weather`);
+      const response = await axios.get(`${API_URL}/proxy/weather`, {
+        params: { lat: latitude, lon: longitude }
+      });
       return response.data;
     } catch (error) {
-      console.error('Error fetching weather data:', error);
-      return null; // Return null instead of undefined
+      handleApiError(error);
     }
   },
 

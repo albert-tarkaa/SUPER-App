@@ -4,14 +4,14 @@ import { TextInput, Text } from 'react-native-paper';
 import { Link } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomButton from '@/components/CustomButton';
+import CustomButton from '@/components/Utils/CustomButton';
 import { loginWithGoogle } from '@/components/ReduxStore/Slices/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo';
 import * as Linking from 'expo-linking';
 import PasswordValidation from '@/components/Utils/PasswordValidation';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -166,6 +166,7 @@ const OnboardingScreen = () => {
           <Text style={styles.orText}>OR</Text>
 
           <CustomButton mode="outlined" onPress={onPressGoogle} rippleColor="#f1f1f1">
+            <MaterialCommunityIcons name="google" size={20} color="black" />
             Continue with Google
           </CustomButton>
 

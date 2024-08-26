@@ -9,10 +9,8 @@ import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSelector } from 'react-redux';
 import { getDestinationLocation, getUserLocationSelector } from '@/components/ReduxStore/Slices/locationSlice';
-import { Button, Modal, Portal, Provider } from 'react-native-paper';
-import LottieView from 'lottie-react-native';
 import { router } from 'expo-router';
-import { RouteService, transportModes } from './Utils/ProxyAPICalls';
+import { RouteService, transportModes } from '../Utils/ProxyAPICalls';
 import LocationErrorScreen from '@/app/LocationErrorScreen';
 
 const transportStyles = {

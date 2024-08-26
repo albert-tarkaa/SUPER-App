@@ -11,9 +11,7 @@ const ResetPasswordScreen = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>Please type in your new paasword </Text>
-        <Text style={styles.subtitle}>
-          and confirm it to reset your password.
-        </Text>
+        <Text style={styles.subtitle}>and confirm it to reset your password.</Text>
 
         <TextInput
           // label="Password"
@@ -47,12 +45,7 @@ const ResetPasswordScreen = () => {
           placeholder="Confirm Password"
         />
 
-        <Button
-          mode="contained"
-          style={styles.createAccountButton}
-          labelStyle={styles.buttonLabel}
-          onPress={() => navigation.navigate('LetsKnowYouScreen')}
-        >
+        <Button mode="contained" style={styles.createAccountButton} labelStyle={styles.buttonLabel} onPress={() => navigation.navigate('LetsKnowYouScreen')}>
           Reset Password
         </Button>
       </View>

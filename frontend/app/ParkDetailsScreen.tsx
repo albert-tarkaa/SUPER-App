@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo, useRef, useState, Animated } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, Text, SectionList } from 'react-native';
-import { Card, Paragraph, Title, Modal, Portal, Button, Provider, Avatar } from 'react-native-paper';
+import { Card, Paragraph, Title, Modal, Portal, Button, Provider } from 'react-native-paper';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import WeatherDashboard from '@/components/WeatherDashboard';
-import Events from '@/components/Events';
-import CustomButton from '@/components/CustomButton';
+import WeatherDashboard from '@/components/Weather/WeatherDashboard';
+import Events from '@/components/Events/Events';
+import CustomButton from '@/components/Utils/CustomButton';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { setDestinationLocation } from '@/components/ReduxStore/Slices/locationSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import LottieView from 'lottie-react-native';
 import ApiService from '@/components/Utils/ProxyAPICalls';
 import { useQuery } from '@tanstack/react-query';
-import NearbyPlacesList from '@/components/NearbyPlacesList';
+import NearbyPlacesList from '@/components/ParkDetails/NearbyPlacesList';
 
 const ParkDetailsScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);

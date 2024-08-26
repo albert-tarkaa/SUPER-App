@@ -1,8 +1,7 @@
 import { StyleSheet, ImageBackground } from 'react-native';
 import { Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import CustomButton from '@/components/CustomButton';
-import SignInScreen from './SignInScreen';
+import CustomButton from '@/components/Utils/CustomButton';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 
@@ -23,26 +22,13 @@ export default function Index() {
   };
 
   return (
-    <ImageBackground
-      source={require('@/assets/images/HomeScreen.png')}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <ImageBackground source={require('@/assets/images/HomeScreen.png')} style={styles.background} resizeMode="cover">
       <View style={styles.textContainer}>
-        <Text style={[styles.textPrimary, { color: '#FEFBFF' }]}>
-          Small Urban Park Environments & Residents
-        </Text>
-        <Text style={[styles.textSecondary, { color: '#FEFBFF' }]}>
-          Your ultimate guide to finding green spaces and parks in Leeds
-        </Text>
+        <Text style={[styles.textPrimary, { color: '#FEFBFF' }]}>Small Urban Park Environments & Residents</Text>
+        <Text style={[styles.textSecondary, { color: '#FEFBFF' }]}>Your ultimate guide to finding green spaces and parks in Leeds</Text>
       </View>
       <View style={styles.container}>
-        <CustomButton
-          mode="outlined"
-          onPress={handleGetStarted}
-          style={styles.button}
-          color="white"
-        >
+        <CustomButton mode="outlined" onPress={handleGetStarted} style={styles.button} color="white">
           Get Started
         </CustomButton>
       </View>

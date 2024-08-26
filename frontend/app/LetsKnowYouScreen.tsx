@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, SafeAreaView, Platform, TouchableOpacity, Modal, FlatList } from 'react-native';
 import { TextInput, Text } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import CustomButton from '@/components/CustomButton';
+import CustomButton from '@/components/Utils/CustomButton';
 import { useDispatch, useSelector } from 'react-redux';
 import { signup } from '@/components/ReduxStore/Slices/authSlice';
 import DateTimePicker from '@react-native-community/datetimepicker';
