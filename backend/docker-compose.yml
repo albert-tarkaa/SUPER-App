@@ -23,6 +23,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=compose-postgres  # Database username
       - SPRING_DATASOURCE_PASSWORD=compose-postgres  # Database password
       - "SPRING_PROFILES_ACTIVE=prod"  # Activate the 'prod' profile for Spring Boot
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+      - AIRQUALITY_API_KEY=${AIRQUALITY_API_KEY}
+      - OPENROUTE_API_KEY=${OPENROUTE_API_KEY}
+      - VOICERSS_API_KEY=${VOICERSS_API_KEY}
+      - PREDICTHQ_API_KEY=${PREDICTHQ_API_KEY}
 
     # Define a volume for persistent data storage
     volumes:

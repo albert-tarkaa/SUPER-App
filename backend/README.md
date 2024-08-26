@@ -90,11 +90,20 @@ This project involves:
 3. Access the application on `http://localhost:8080/api/v1/parks/list-parks` in your browser.
 
 ## How to create a docker image and push to Docker Hub
-1. Run `docker build -t <image-name>:tag .` in the root directory of the project to build the image. Example: `docker 
-   build -t super-app:latest .`
+1. Build and Tag the Docker Image: Run the following command in the root directory of the project to build and tag the image:
+    ```shell
+   docker build -t <docker-hub-username>/<image-name>:<tag> .
+    ```
+    Example:
+    ```shell
+   docker build -t tarkaa/superapp:latest .
+    ```
 2. Run `docker login` to login to Docker Hub.
-3. Run `docker tag <image-id> <docker-hub-username>/<image-name>:tag` to tag the image. Example: `docker tag 1234567890 
-   alberttarkaa/super-app:latest`
-4. Run `docker push <docker-hub-username>/<image-name>:tag` to push the image to Docker Hub. Example: `docker push 
-   alberttarkaa/super-app:latest`
-
+3. Push the Docker Image to Docker Hub: Run the following command to push the image to Docker Hub:
+    ```shell
+   docker push <docker-hub-username>/<image-name>:<tag>
+    ```
+    Example:
+    ```shell
+   docker push tarkaa/superapp:latest
+    ```
