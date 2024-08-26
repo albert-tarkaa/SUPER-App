@@ -50,8 +50,8 @@ This project involves:
 - **Documentation**: Postman. Documentation can be found [here](https://documenter.getpostman.com/view/32686033/2sA3s7kpho)
 
 ## Third-party APIs Used
-- [OpenWeatherMap](https://openweathermap.org)
-    - Used to fetch weather data for Leeds, UK.
+- [WeatherMap](https://https://www.weatherapi.com)
+    - Used to fetch current and 5-day forecast weather data for Leeds, UK.
     - Endpoint: ``` 
                     /api/v1/proxy/weather
                  ```

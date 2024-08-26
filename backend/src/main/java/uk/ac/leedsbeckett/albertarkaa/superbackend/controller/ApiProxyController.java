@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +37,8 @@ public class ApiProxyController {
     // WebClient is a non-blocking, reactive HTTP client that is part of the Spring WebFlux module and is used to make HTTP requests
     private final WebClient webClient;
 
-    @Value("${OPENWEATHER_API_KEY}")
-    private String openWeatherApiKey;
+    @Value("${WEATHER_API_KEY}")
+    private String WeatherApiKey;
 
     @Value("${AIRQUALITY_API_KEY}")
     private String airQualityApiKey;
@@ -51,14 +52,29 @@ public class ApiProxyController {
     @Value("${PREDICTHQ_API_KEY}")
     private String predictHqApiKey;
 
-
-    // This method fetches weather data from the OpenWeather API for Leeds, UK
+    // This method fetches weather data from the WeatherMap API based on the latitude and longitude of a location
     @GetMapping("/weather")
-    public Mono<ResponseEntity<String>> getWeather() {
-        logger.info("Fetching weather data for Leeds, UK");
-        // The WebClient instance is used to make a GET request to the OpenWeather API
+   // @Cacheable(value = "weatherCache", key = "#lat + '-' + #lon", condition = "#result.statusCode.is2xxSuccessful()")
+    public Mono<ResponseEntity<String>> getWeather(
+            @RequestParam Double lat,
+            @RequestParam Double lon
+    ) {
+        logger.info("Fetching weather data for lat: {}, lon: {}", lat, lon);
+
+        String cacheKey = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HH"));
+
         return webClient.get()
-                .uri("https://api.openweathermap.org/data/2.5/weather?q=Leeds,uk&APPID={apiKey}", openWeatherApiKey)
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("https")
+                        .host("api.weatherapi.com")
+                        .path("/v1/forecast.json")
+                        .queryParam("key", WeatherApiKey)
+                        .queryParam("q", lat + "," + lon)
+                        .queryParam("days", 7)
+                        .queryParam("aqi", "no")
+                        .queryParam("alerts", "no")
+                        .queryParam("cache-buster", cacheKey)
+                        .build())
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(ResponseEntity::ok)
