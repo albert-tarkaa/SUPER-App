@@ -66,7 +66,7 @@ Ensure you have the following dependencies installed:
 - **Node.js**: v20.12.1
 - **NPM**: 10.8.1
 - **React Native**: ^0.74.3
-- **Expo**: ^51.0.17
+- **Expo**: ^51.0.17 (You may have to signup to [Expo](https://expo.dev))
 - **GitHub**
 
 ### Steps to Run the Application
