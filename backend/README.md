@@ -26,7 +26,7 @@ This project involves:
 
 - Users can locate parks and green spaces within Leeds city. &#9989;
 - Directions on how to access the parks and green spaces on foot, by cycle and by bus. &#9989;
-- Details about parks and green spaces facilities and accessibility, family and children friendliness including toilets, benches, bins, water fountains and sand areas.&#9203;
+- Details about parks and green spaces facilities and accessibility, family and children friendliness including toilets, benches, bins, water fountains and sand areas.&#9989;
 - Information on the events happening, and when parks and green spaces are open. &#9989;
 - Access to microclimate and air quality data - Display of average and current air quality data, UV levels, and pollen count in the parks and green spaces. &#9989;
 
@@ -48,6 +48,32 @@ This project involves:
 - **Backend**: Spring Boot, Java v17, PostgreSQL v16
 - **Tools**: Git, IntelliJ IDEA, Postman, pgAdmin, Maven, Docker
 - **Documentation**: Postman. Documentation can be found [here](https://documenter.getpostman.com/view/32686033/2sA3s7kpho)
+
+## Setting up the project
+1. Clone the repository
+2. Open the project in IntelliJ IDEA or any other Java IDE.
+3. Download and install PostgreSQL, create a PostgreSQL database named `super` and update the `application.properties` 
+   file with your database 
+   credentials.
+4. Make sure you have all the API keys for the third-party APIs used in the project defined in the `application.
+   properties` file or the `.env.properties` file.
+5. Run the project which has port 8080 defined in the `application.properties` file, change the port if necessary.
+6. It is necessary to tunnel the application to the internet using a service like [ngrok](https://ngrok.com) to enable 
+   the React Native app to access the application. This is the link to the Ngrok documentation page for more 
+   information on how to set up ngrok: [Ngrok Documentation](https://ngrok.com/docs/getting-started)
+7. Once your have signed up for an account on ngrok, download and install ngrok, set up your auth token and run the 
+   following 
+   command to tunnel 
+   the application to the internet:
+   ```shell
+   ngrok http http://locahost:<port>
+   ```
+8. Replace the API_URL value with the Backend URL provided by Ngrok on line 5 of
+
+   ```bash
+      components/Utils/ProxyAPICalls.tsx
+   ```
+   in the frontend project.
 
 ## Third-party APIs Used
 - [WeatherAPI](https://https://www.weatherapi.com)

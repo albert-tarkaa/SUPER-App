@@ -14,6 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
+       "bundleIdentifier": "com.albert.tarkaa.lbusuper",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true

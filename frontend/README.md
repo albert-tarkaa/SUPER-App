@@ -38,7 +38,7 @@ The architecture of the app is as follows:
 
 - Users can locate parks and green spaces within Leeds city. &#9989;
 - Directions on how to access the parks and green spaces on foot, by cycle and by bus. &#9989;
-- Details about parks and green spaces facilities and accessibility, family and children friendliness including toilets, benches, bins, water fountains and sand areas.&#9203;
+- Details about parks and green spaces facilities and accessibility, family and children friendliness including toilets, benches, bins, water fountains and sand areas.&#9989;
 - Information on the events happening, and when parks and green spaces are open. &#9989;
 - Access to microclimate and air quality data - Display of average and current air quality data, UV levels, and pollen count in the parks and green spaces. &#9989;
 
@@ -94,7 +94,9 @@ Ensure you have the following dependencies installed:
    ```bash
       npx expo start
    ```
-5. Scan the QR code to run the app locally using the Expo Go mobile app installed on your Android device or by using Android studio
+5. Press s to switch to `Using Expo Go` if the application is running on Development mode.
+
+6. Scan the QR code to run the app locally using the Expo Go mobile app installed on your Android device or by using Android studio
 
 
 ## To build for Android
