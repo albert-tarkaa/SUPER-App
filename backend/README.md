@@ -30,24 +30,13 @@ This project involves:
 - Information on the events happening, and when parks and green spaces are open. &#9989;
 - Access to microclimate and air quality data - Display of average and current air quality data, UV levels, and pollen count in the parks and green spaces. &#9989;
 
-### Performance Features - These features will directly impact user satisfaction
-
-- Information about amenities near parks and green spaces and in the vicinity (cash machines, cafes, shops, car 
-  parks, secure bicycle parking). &#9989;
-- Information on walking trails and what users can see along the way.
-- Information about plant and tree species as well as parks and green spaces initiatives e.g. no-mow May.
-- Art in the parks and green spaces - Historical and cultural references.
-- Display of all green and blue spaces users can walk to within 10 minutes.
-- Filters are available to show or hide a map of the parks and green spaces along with their various facilities. &#9203;
-
-### Delight Features - These features will significantly enhance their overall experience
-
-- Informative and engaging messages about the benefits of parks and green spaces air quality, e.g., air quality comparisons between city square and Park square.
-
 ## Technologies Used
 - **Backend**: Spring Boot, Java v17, PostgreSQL v16
 - **Tools**: Git, IntelliJ IDEA, Postman, pgAdmin, Maven, Docker
 - **Documentation**: Postman. Documentation can be found [here](https://documenter.getpostman.com/view/32686033/2sA3s7kpho)
+
+![Architectural Diagram](src/main/resources/static/Architectural Diagram.png)
+Architectural Diagram
 
 ## Setting up the project
 1. Clone the repository
