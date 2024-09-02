@@ -35,7 +35,7 @@ This project involves:
 - **Tools**: Git, IntelliJ IDEA, Postman, pgAdmin, Maven, Docker
 - **Documentation**: Postman. Documentation can be found [here](https://documenter.getpostman.com/view/32686033/2sA3s7kpho)
 
-![Architectural Diagram](src/main/resources/static/Architectural Diagram.png)
+![Architectural Diagram](https://github.com/albert-tarkaa/SUPER-App/blob/main/backend/src/main/resources/static/Architectural%20Diagram.png)
 Architectural Diagram
 
 ## Setting up the project
