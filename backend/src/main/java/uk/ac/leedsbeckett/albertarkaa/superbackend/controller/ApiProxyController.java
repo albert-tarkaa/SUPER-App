@@ -157,7 +157,7 @@ public class ApiProxyController {
                         .queryParam("state", "active") // Only active events
                         .queryParam("sort", "start") // Sort by start date
                         .queryParam("limit", 5) // Limit to 5 events
-                        .queryParam("within", "1.5mi@53.7995746,-1.5471022")  // Leeds coordinates
+                        .queryParam("saved_location.location_id", "WGr2NwsguUR5RKtD8iGV6Q")  // Leeds coordinates
                         .build())
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + predictHqApiKey)
