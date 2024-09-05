@@ -1,6 +1,5 @@
 package uk.ac.leedsbeckett.albertarkaa.superbackend.controller.auth;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
