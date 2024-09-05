@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 
 //Replace this with your backend API URL
-export const API_URL = 'https://ecd6-81-98-36-3.ngrok-free.app/api/v1';
+export const API_URL = 'https://barnacle-handy-highly.ngrok-free.app/api/v1';
 
 const handleApiError = (error) => {
   if (error.response) {
